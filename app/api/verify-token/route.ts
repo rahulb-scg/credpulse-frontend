@@ -13,7 +13,7 @@ export const POST = async (req: NextRequest) => {
   try {
     const data = await req.json();
     const client = new CognitoIdentityProviderClient({
-      region: process.env.AWS_REGION,
+      region: process.env.NEXT_PUBLIC_AWS_REGION,
     });
     const SecretHash = calculateSecretHash(data?.email);
     const input = {
