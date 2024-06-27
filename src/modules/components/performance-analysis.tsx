@@ -17,8 +17,8 @@ const PerformanceAnalysis = ({
       <div className="min-h-72 min-w-64">
         <LineStackChart
           categoryData={date}
-          legends={Object.keys(restData || {}).map((key: string) =>
-            key?.split("_").join(" ").toUpperCase(),
+          legends={Object.keys(restData || {}).map(
+            (key: string) => key?.split("_").join(" ").toUpperCase(),
           )}
           data={Object.entries(restData).map(([key, value]: any) => {
             return {
