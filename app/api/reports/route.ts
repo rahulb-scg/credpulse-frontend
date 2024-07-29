@@ -23,10 +23,10 @@ export const POST = async (req: NextRequest) => {
     created_at: new Date().toISOString(),
     user_id: session?.user_id,
     processed_url: "",
-	date: {
-		start_date: "2020-12-31",
-		end_date: "2023-12-31"
-	}
+    date: {
+      start_date: "2020-12-31",
+      end_date: "2023-12-31",
+    },
   };
   const command = new PutCommand({
     TableName: "Reports",
