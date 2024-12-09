@@ -7,7 +7,7 @@ import React from "react";
 
 interface RegressChartProps {
   title: string;
-  data: number[][];
+  data: string[][];
   order?: number;
 }
 
@@ -51,13 +51,14 @@ export function getFakeRegressionData(
 
 const Regression: React.FC<RegressChartProps> = ({ title, data, order }) => {
   echarts.registerTransform(transform.regression);
+  console.log(data);
 
   let chartOption: echarts.EChartsOption = {
     dataset: [
       {
         source: data.map((d) => [
-          roundToTwoDecimals(d[0]),
-          roundToTwoDecimals(d[1]),
+          roundToTwoDecimals(parseFloat(d[0])),
+          roundToTwoDecimals(parseFloat(d[1])),
         ]),
       },
       {
@@ -73,6 +74,7 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order }) => {
     title: {
       text: title,
       left: "center",
+      padding: 16,
     },
     tooltip: {
       trigger: "axis",

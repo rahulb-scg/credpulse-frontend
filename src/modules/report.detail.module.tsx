@@ -23,6 +23,8 @@ const ReportDetailModule = ({
   data: DictionaryType;
   isLoading: boolean;
 }) => {
+  console.log(data);
+
   if (isLoading && !data?.id)
     return (
       <div className="flex w-full flex-1 items-center justify-center">
@@ -102,6 +104,7 @@ const ReportDetailModule = ({
           <GenerateReport
             type={data?.report?.type}
             modal={data?.processedReport?.modal}
+            overview={data?.processedReport?.overview}
           />
         ),
         isVisible: data?.report?.type !== "univariates",

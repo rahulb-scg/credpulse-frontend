@@ -1,7 +1,11 @@
 "use client";
 import AutoForm, { AutoFormSubmit } from "@/components/autoForm/auto-form";
 import { Input } from "@/components/ui/input";
-import { reportModelEnum } from "@/constants/preference.constant";
+import {
+  reportModelEnum,
+  tmasColumns,
+  uniVariateColumns,
+} from "@/constants/preference.constant";
 import { useReportUpload } from "@/hooks/use-report-upload.hook";
 import { createReportFormSchema } from "@/types/report.type";
 import { useMemo, useState } from "react";
@@ -9,53 +13,7 @@ import { useMemo, useState } from "react";
 const CreateReportForm = () => {
   const { onSubmit, isLoading } = useReportUpload();
 
-  const [columns, setColumns] = useState({
-    loanid: {
-      column_name: "loanid",
-      header: "Loan Identifier",
-    },
-    derivedloanstatus: {
-      column_name: "derivedloanstatus",
-      header: "Loan Status",
-    },
-    nextderivedloanstatus: {
-      column_name: "nextderivedloanstatus",
-      header: "Loan Status",
-    },
-    loanstatus: {
-      column_name: "loanstatus",
-      header: "Loan Status",
-    },
-    days_diff: {
-      column_name: "diff",
-      header: "Days Past Due",
-    },
-
-    endbalance: {
-      column_name: "endbalance",
-      header: "End Balance",
-    },
-    term: {
-      column_name: "term",
-      header: "Term",
-    },
-    loanpurpose: {
-      column_name: "loanpurpose",
-      header: "Loan Purpose",
-    },
-    asofdate: {
-      column_name: "asofdate",
-      header: "As Of Date",
-    },
-    chargeoffamt: {
-      column_name: "chargeoffamt",
-      header: "Charged Off Amount",
-    },
-    beginbalance: {
-      column_name: "beginbalance",
-      header: "Begin Balance",
-    },
-  });
+  const [columns, setColumns] = useState(uniVariateColumns);
   const modelOptions = useMemo(() => {
     return Object.entries(reportModelEnum).map(([value, label]) => {
       return { value, label };
@@ -99,7 +57,7 @@ const CreateReportForm = () => {
             },
           }}
         >
-          <AutoFormSubmit {...{ isLoading }}>Processed</AutoFormSubmit>
+          <AutoFormSubmit {...{ isLoading }}>Process</AutoFormSubmit>
         </AutoForm>
       </div>
       <div className="flex  flex-col gap-4   p-4">
