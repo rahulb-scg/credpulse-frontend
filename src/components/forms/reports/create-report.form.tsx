@@ -8,84 +8,95 @@ import {
 } from "@/constants/preference.constant";
 import { useReportUpload } from "@/hooks/use-report-upload.hook";
 import { createReportFormSchema } from "@/types/report.type";
-import { useMemo, useState } from "react";
+import { z } from "zod";
+import { useRouter } from "next/navigation";
+import { toast } from "@/hooks/core/use-toast";
 
 const CreateReportForm = () => {
-  const { onSubmit, isLoading } = useReportUpload();
+  const { isLoading } = useReportUpload();
+  const router = useRouter();
 
-  const [columns, setColumns] = useState(uniVariateColumns);
-  const modelOptions = useMemo(() => {
-    return Object.entries(reportModelEnum).map(([value, label]) => {
-      return { value, label };
-    });
-  }, []);
+  const handleSubmit = async (values: any) => {
+    const formData = new FormData();
+    const typedValues = values as z.infer<typeof createReportFormSchema>;
+
+    formData.append("report_name", typedValues.report_name);
+    formData.append("config_file", typedValues.config_file);
+    formData.append("data_file", typedValues.data_file);
+    formData.append("description", typedValues.description);
+
+    try {
+      console.log("Sending request to Flask server");
+      const response = await fetch("http://localhost:5000/newreport", {
+        method: "POST",
+        body: formData,
+      });
+
+      console.log("Response status:", response.status);
+
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+
+      const data = await response.json();
+      console.log("Response from Flask:", data);
+
+      // Assuming Flask returns an ID in the response
+      router.push(`/dashboard/reports/d/${data.report_id}`);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create report. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="grid grid-cols-2 gap-4">
       <div className="flex flex-col gap-4 p-4">
-        <div className="text-xl font-medium">Model Information</div>
+        <div className="text-xl font-medium">Report Information</div>
         <AutoForm
           formSchema={createReportFormSchema}
-          onSubmit={async (values) => {
-            await onSubmit({
-              ...values,
-              columns,
-            });
-          }}
+          onSubmit={handleSubmit}
           values={{
-            model: Object.keys(reportModelEnum)[0],
+            config_file: undefined,
+            data_file: undefined,
+            report_name: "",
+            description: "",
           }}
           fieldConfig={{
-            model: {
-              fieldType: "select_input",
-              inputProps: {
-                options: modelOptions,
-              },
-            },
-            file: {
+            config_file: {
               fieldType: "file",
               inputProps: {
-                accept: {
-                  "text/csv": [],
-                  "application/vnd.ms-excel": [],
-                  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-                    [],
-                },
-                subTitle: "Supported Files: CSV, XLSX",
+                disabled: isLoading,
+              },
+            },
+            data_file: {
+              fieldType: "file",
+              inputProps: {
+                disabled: isLoading,
+              },
+            },
+            report_name: {
+              fieldType: "textarea",
+              inputProps: {
+                placeholder: "Report Name",
+                disabled: isLoading,
+              },
+            },
+            description: {
+              fieldType: "textarea",
+              inputProps: {
+                placeholder: "Description",
                 disabled: isLoading,
               },
             },
           }}
         >
-          <AutoFormSubmit {...{ isLoading }}>Process</AutoFormSubmit>
+          <AutoFormSubmit {...{ isLoading }}>Submit</AutoFormSubmit>
         </AutoForm>
-      </div>
-      <div className="flex  flex-col gap-4   p-4">
-        <div className="text-xl font-medium">Column Configuration</div>
-        <div className="flex h-[60vh] flex-col gap-4 overflow-auto">
-          {Object.entries(columns).map(([key, value]) => {
-            return (
-              <CsvColumnItem
-                key={key}
-                {...{
-                  column_name: value?.column_name,
-                  header: value?.header,
-                  onChange: (columnName) => {
-                    setColumns((prev) => {
-                      return {
-                        ...prev,
-                        [key]: {
-                          ...value,
-                          column_name: columnName,
-                        },
-                      };
-                    });
-                  },
-                }}
-              />
-            );
-          })}
-        </div>
       </div>
     </div>
   );

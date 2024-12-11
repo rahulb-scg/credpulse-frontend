@@ -51,69 +51,69 @@ const ReportDetailModule = ({
     );
   const isUniVariateType = data?.report?.type === "univariates";
   const tabProps: DataTabsProps = {
-    className: "w-full",
+    className: "w-full container",
     tabs: [
-      {
-        title: "Loan Purpose Summary",
-        key: "loan-purpose-summary",
-        component: (
-          <LoanPurposeSummary
-            {...{
-              loan_purpose_summary: data?.processedReport?.term_purpose_summary,
-            }}
-          />
-        ),
-        isVisible: !isUniVariateType,
-      },
-      {
-        title: "Performance Analysis",
-        key: "performance-analysis",
-        component: (
-          <PerformanceAnalysis
-            {...{
-              performance_analysis_summary:
-                data?.processedReport?.performance_analysis_summary,
-            }}
-          />
-        ),
-        isVisible: !isUniVariateType,
-      },
+      // {
+      //   title: "Loan Purpose Summary",
+      //   key: "loan-purpose-summary",
+      //   component: (
+      //     <LoanPurposeSummary
+      //       {...{
+      //         loan_purpose_summary: data?.processedReport?.term_purpose_summary,
+      //       }}
+      //     />
+      //   ),
+      //   isVisible: !isUniVariateType,
+      // },
+      // {
+      //   title: "Performance Analysis",
+      //   key: "performance-analysis",
+      //   component: (
+      //     <PerformanceAnalysis
+      //       {...{
+      //         performance_analysis_summary:
+      //           data?.processedReport?.performance_analysis_summary,
+      //       }}
+      //     />
+      //   ),
+      //   isVisible: !isUniVariateType,
+      // },
 
-      {
-        title: "APR",
-        key: "apr",
-        component: (
-          <div className="min-h-72 min-w-64">
-            <APR title="APR" data={data} isLoading={isLoading} />
-          </div>
-        ),
-      },
-      {
-        title: "FICO",
-        key: "fico",
-        component: (
-          <div className="min-h-72 min-w-64">
-            <FICO title="FICO" data={data} isLoading={isLoading} />
-          </div>
-        ),
-      },
+      // {
+      //   title: "APR",
+      //   key: "apr",
+      //   component: (
+      //     <div className="min-h-72 min-w-64">
+      //       <APR title="APR" data={data} isLoading={isLoading} />
+      //     </div>
+      //   ),
+      // },
+      // {
+      //   title: "FICO",
+      //   key: "fico",
+      //   component: (
+      //     <div className="min-h-72 min-w-64">
+      //       <FICO title="FICO" data={data} isLoading={isLoading} />
+      //     </div>
+      //   ),
+      // },
       {
         title: "Generated Report",
         key: "generate-report",
         component: (
           <GenerateReport
             type={data?.report?.type}
-            modal={data?.processedReport?.modal}
-            overview={data?.processedReport?.overview}
+            modal={data?.report}
+            overview={data}
           />
         ),
         isVisible: data?.report?.type !== "univariates",
       },
-      {
-        title: "Univariate Report",
-        key: "univariate-report",
-        component: <UnivariateReport modal={data?.processedReport?.modal} />,
-      },
+      // {
+      //   title: "Univariate Report",
+      //   key: "univariate-report",
+      //   component: <UnivariateReport modal={data?.processedReport?.modal} />,
+      // },
     ],
   };
 

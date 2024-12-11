@@ -57,8 +57,8 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order }) => {
     dataset: [
       {
         source: data.map((d) => [
-          roundToTwoDecimals(parseFloat(d[0])),
-          roundToTwoDecimals(parseFloat(d[1])),
+          parseFloat(d[0]).toFixed(5),
+          parseFloat(d[1]).toFixed(5),
         ]),
       },
       {

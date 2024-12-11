@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 export const createReportFormSchema = z.object({
-  model: z.string(),
-  file: z.instanceof(File).describe("Select File"),
+  config_file: z.instanceof(File),
+  data_file: z.instanceof(File),
+  report_name: z.string(),
+  description: z.string(),
 });
 export type RepDataType = {
   report_name: string;

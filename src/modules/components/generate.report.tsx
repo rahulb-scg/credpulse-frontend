@@ -11,6 +11,7 @@ import { DictionaryType } from "@/types/common.type";
 import ReportTableWrapper from "./report-table-wrapper";
 import Regression from "@/components/echarts/Regression";
 import { Separator } from "@radix-ui/react-select";
+import { TableUtils } from "@/utils/table.utils";
 
 const GenerateReport = ({
   type,
@@ -21,15 +22,29 @@ const GenerateReport = ({
   type: string;
   overview: DictionaryType;
 }) => {
+  const baseData = modal?.result?.data;
+  console.log(baseData);
   if (!modal) return <></>;
   if (type === "tmas") {
-    const jsonDataTM = JSON.parse(modal?.tmas1);
-    const columnsTM = Object.keys(jsonDataTM);
-    const dataTM = Object.values(jsonDataTM);
-    const jsonDataCGLCurve = JSON.parse(modal?.CGL_Curve);
-    const horizontalColumnCGL_Curve = Object.keys(jsonDataCGLCurve);
-    const dataCGL_Curve: DictionaryType[] = Object.values(jsonDataCGLCurve);
-    const columnsCGL_Curve = Object.keys(dataCGL_Curve[0]);
+    // const jsonDataTM = JSON.parse(modal?.tmas1);
+    // const columnsTM = Object.keys(jsonDataTM);
+    // const dataTM = Object.values(jsonDataTM);
+    const jsonDataCGLCurve = baseData?.CGL_Curve;
+
+    const {
+      columns: CGLCurveColumns,
+      rows: dataCGL_Curve,
+      rowHeaders: CGLCurveRows,
+    } = TableUtils.transformToTableData(jsonDataCGLCurve, {
+      rowKeyPrefix: "Period_",
+      sortRows: true,
+      formatValue: (value) => {
+        if (typeof value === "number") {
+          return value.toFixed(5);
+        }
+        return value;
+      },
+    });
 
     return (
       <>
@@ -37,37 +52,37 @@ const GenerateReport = ({
           <div>
             <div className="flex cursor-default items-center gap-4">
               <h2 className="font-bold">ALLL(%): </h2>
-              {overview?.ALLL}
+              {modal?.result?.data?.ALLL.toFixed(3)}
             </div>
-            <div className="flex cursor-default items-center gap-4">
+            {/* <div className="flex cursor-default items-center gap-4">
               <h2 className="font-bold">Base Month:</h2>
               {overview?.as_of_date}
-            </div>
-            <div className="flex cursor-default items-center gap-4">
+            </div> */}
+            {/* <div className="flex cursor-default items-center gap-4">
               <h2 className="font-bold">Weighted Average Age (Months):</h2>
               {overview?.weighted_avg_age}
-            </div>
-            <div className="flex cursor-default items-center gap-4">
+            </div> */}
+            {/* <div className="flex cursor-default items-center gap-4">
               <h2 className="font-bold">Forecast Period:</h2>
               <div className="flex gap-8">
                 From: {overview?.forecast_period?.from} <Separator></Separator>
                 To: {overview?.forecast_period?.to}
               </div>
-            </div>
-            <div className="flex cursor-default items-center gap-4">
+            </div> */}
+            {/* <div className="flex cursor-default items-center gap-4">
               <h2 className="font-bold">Forecast Duration (Months):</h2>
               {overview?.forecast_duration}
-            </div>
+            </div> */}
             <div className="flex cursor-default items-center gap-4">
               <h2 className="font-bold">CECL Factor (%):</h2>
-              {overview?.CECL_factor}
+              {modal?.result?.data?.CECL.toFixed(3)}
             </div>
-            <div className="flex cursor-default items-center gap-4">
+            {/* <div className="flex cursor-default items-center gap-4">
               <h2 className="font-bold">CECL Amount ($):</h2>
               {overview?.CECL_amount} (for forecasted period)
-            </div>
+            </div> */}
           </div>
-          <ScrollArea className="flex-1 rounded-md border">
+          {/* <ScrollArea className="flex-1 rounded-md border">
             <Table className="relative">
               <TableHeader className="border-b bg-muted ">
                 <TableHead className="bg-muted text-primary">
@@ -101,14 +116,25 @@ const GenerateReport = ({
               </TableBody>
             </Table>
             <ScrollBar orientation="horizontal" />
-          </ScrollArea>
+          </ScrollArea> */}
         </ReportTableWrapper>
+        <div className="flex w-full justify-center">
+          <Regression
+            title="CGL Curve Graph"
+            data={dataCGL_Curve.map((row, index) => [
+              index.toString(),
+              (row as DictionaryType)["Charged Off"].toString(),
+            ])}
+            order={2}
+          />
+        </div>
+
         <ReportTableWrapper title="CGL Curve Data">
           <ScrollArea className="flex-1 rounded-md border">
             <Table className="relative">
               <TableHeader className="border-b bg-muted ">
                 <TableHead className="bg-muted text-primary">Month</TableHead>
-                {columnsCGL_Curve?.map((column) => {
+                {CGLCurveColumns?.map((column) => {
                   return (
                     <TableHead className="border-l text-primary" key={column}>
                       {column}
@@ -121,14 +147,16 @@ const GenerateReport = ({
                   return (
                     <TableRow key={index}>
                       <TableCell className="w-auto bg-muted font-medium text-primary">
-                        {horizontalColumnCGL_Curve[index]}
+                        {CGLCurveRows[index]}
                       </TableCell>
-                      {columnsCGL_Curve?.map((column) => {
+                      {CGLCurveColumns?.map((column) => {
                         let value = (row as DictionaryType)?.[column];
-                        if (typeof value === "number") value = value.toFixed(2);
+                        if (typeof value === "number") {
+                          value = value.toFixed(5);
+                        }
                         return (
                           <TableCell className="border-l" key={column}>
-                            {(row as DictionaryType)?.[column]}
+                            {value}
                           </TableCell>
                         );
                       })}
@@ -139,11 +167,6 @@ const GenerateReport = ({
             </Table>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
-          <Regression
-            title="CGL Curve Graph"
-            data={overview.cgl_array}
-            order={2}
-          ></Regression>
         </ReportTableWrapper>
       </>
     );

@@ -26,6 +26,10 @@ export const secretEnv = createEnv({
     GOOGLE_CLIENT_SECRET: z
       .string()
       .min(1, { message: "GOOGLE_CLIENT_SECRET must be a non-empty string" }),
+    MONGODB_URI: z.string().url({ message: "MONGODB_URI must be a valid URL" }),
+    FLASK_API_URL: z
+      .string()
+      .url({ message: "FLASK_API_URL must be a valid URL" }),
   },
   runtimeEnv: {
     NEXTAUTH_URL: process.env.NEXTAUTH_URL,
@@ -37,5 +41,7 @@ export const secretEnv = createEnv({
 
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+    MONGODB_URI: process.env.MONGODB_URI,
+    FLASK_API_URL: process.env.FLASK_API_URL,
   },
 });

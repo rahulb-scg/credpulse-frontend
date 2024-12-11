@@ -1,35 +1,35 @@
-import { docClient } from "@/lib/dynamodb";
-import { DeleteItemCommand } from "@aws-sdk/client-dynamodb";
-import { GetCommand } from "@aws-sdk/lib-dynamodb";
 import { NextRequest, NextResponse } from "next/server";
 
 export const GET = async (req: NextRequest, { params }: any) => {
   const reportId = params?.id;
-  const command = new GetCommand({
-    TableName: "Reports",
-    Key: {
-      id: reportId,
-    },
-  });
-  const processedCommand = new GetCommand({
-    TableName: "ProcessedReports",
-    Key: {
-      id: reportId,
-    },
-  });
+
   try {
-    const response = await docClient.send(command);
-    const report = response?.Item;
-    const processedResponse = await docClient.send(processedCommand);
-    const processedReport = processedResponse?.Item;
-    return NextResponse.json({
-      report,
-      processedReport,
+    const response = await fetch(
+      `http://localhost:5000/viewreport/${reportId}`,
+      {
+        next: { revalidate: 60 }, // Cache for 60 seconds
+      },
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch report");
+    }
+
+    const data = await response.json();
+
+    // Return response with cache headers
+    return new NextResponse(JSON.stringify(data), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        "Cache-Control": "public, s-maxage=60, stale-while-revalidate=30",
+      },
     });
   } catch (error) {
+    console.error("Error fetching report:", error);
     return NextResponse.json(
-      { message: "Internal Server Error" },
-      { status: 400 },
+      { message: "Failed to fetch report" },
+      { status: 500 },
     );
   }
 };
@@ -38,20 +38,29 @@ export const DELETE = async (req: NextRequest, { params }: any) => {
   const reportId = params?.id;
 
   try {
-    const command = new DeleteItemCommand({
-      TableName: "Reports",
-      Key: {
-        id: { S: reportId },
+    const response = await fetch(
+      `http://localhost:5000/deletereport/${reportId}`,
+      {
+        method: "DELETE",
       },
-    });
-    await docClient.send(command);
+    );
 
-    return NextResponse.json({ message: "Successfully delete " });
+    if (!response.ok) {
+      if (response.status === 404) {
+        return NextResponse.json(
+          { message: "Report not found" },
+          { status: 404 },
+        );
+      }
+      throw new Error("Failed to delete report from Flask backend");
+    }
+
+    return NextResponse.json({ message: "Successfully deleted" });
   } catch (error) {
-    console.log("error", error);
+    console.error("Error deleting report:", error);
     return NextResponse.json(
       { message: "Internal Server Error" },
-      { status: 400 },
+      { status: 500 },
     );
   }
 };

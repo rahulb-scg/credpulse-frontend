@@ -25,6 +25,7 @@ import {
  * @param {number} [props.maxFiles=5] - The maximum number of files allowed to be uploaded.
  * @param {number} [props.maxSize] - The maximum size of each file in bytes.
  * @param {Object} [props.accept] - The accepted file types with corresponding extensions.
+ * @param {string} [props.subTitle] - The subtitle of the file upload component.
  * @param {ReactNode} [props.children] - The content to render inside the file upload component.
  * @param {boolean} [props.is_multiple] - Whether multiple files can be uploaded at once.
  * @param {boolean} [props.disabled=false] - Whether the file upload is disabled.
@@ -41,9 +42,7 @@ export const FileUploader = ({
   maxSize,
   subTitle,
   accept = {
-    "image/jpeg": [],
-    "image/png": [],
-    "application/pdf": [],
+    "*/*": [],
   },
   children,
   is_multiple,
@@ -161,12 +160,7 @@ const DefaultFileUpload = ({
 
       <RenderTitle {...{ uploading, title, isDragActive }} />
       <div className="text-xs font-medium">
-        {subTitle ?? (
-          <>
-            {" "}
-            Supported Files: <span className="">JPG, PNG, PDF</span>
-          </>
-        )}
+        {subTitle ?? <> All file types supported</>}
       </div>
     </div>
   );
