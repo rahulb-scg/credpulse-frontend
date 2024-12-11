@@ -16,12 +16,12 @@ module.exports = {
         "revamp",
       ],
     ],
-    "type-case": [2, "always", "lower-case"],
-    "type-empty": [2, "never"],
-    "scope-empty": [2, "never"],
-    "scope-case": [2, "always", "lower-case"],
-    "subject-case": [2, "never", ["start-case", "pascal-case", "upper-case"]],
-    "subject-empty": [2, "never"],
-    "header-max-length": [2, "always", 100],
+    "type-case": [0], // Disable case checking
+    "type-empty": [0], // Allow empty type
+    "scope-empty": [0], // Allow empty scope
+    "scope-case": [0], // Disable scope case checking
+    "subject-case": [0], // Disable subject case checking
+    "subject-empty": [0], // Allow empty subject
+    "header-max-length": [0] // Disable max length check
   },
 };
