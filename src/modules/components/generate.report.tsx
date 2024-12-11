@@ -44,8 +44,9 @@ const GenerateReport = ({
 
     // Summary data for the overview table
     const summaryData = [
-      { label: "ALLL", value: modal?.result?.data?.ALLL.toFixed(3) },
-      { label: "CECL Factor", value: modal?.result?.data?.CECL.toFixed(3) },
+      { label: "ALLL", value: modal?.result?.data?.ALLL ? `${modal.result.data.ALLL.toFixed(3)}%` : '-' },
+      { label: "CECL Factor", value: modal?.result?.data?.CECL ? `${modal.result.data.CECL.toFixed(3)}%` : '-' },
+      { label: "CECL Amount", value: modal?.result?.data?.CECL_AMOUNT ? `${modal.result.data.CECL_AMOUNT.toFixed(3)}%` : '-' },
     ];
 
     // Helper function to get matrix column headers
@@ -60,7 +61,7 @@ const GenerateReport = ({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[250px]">Summary</TableHead>
-                  <TableHead>Value (%)</TableHead>
+                  <TableHead>Value</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
