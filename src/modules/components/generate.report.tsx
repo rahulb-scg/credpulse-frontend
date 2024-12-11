@@ -116,15 +116,30 @@ const GenerateReport = ({
 
         {/* CGL Curve Analysis Section */}
         <ReportTableWrapper title="CGL Curve Analysis">
-          {/* Regression Graph */}
-          <div className="flex justify-center w-full mb-6">
+          {/* CGL Graph */}
+          <div className="flex justify-center mb-6">
             <Regression
-              title="CGL Curve Graph"
+              title="Cumulative Gross Loss"
               data={dataCGL_Curve.map((row, index) => [
                 index.toString(),
                 (row as DictionaryType)["Charged Off"].toString(),
               ])}
               order={2}
+              xAxisLabel="Period"
+              yAxisLabel="Cumulative Loss (%)"
+            />
+          </div>
+          {/* Monthly Default Rate Graph */}
+          <div className="flex justify-center mb-6">
+            <Regression
+              title="Monthly Default Rate"
+              data={dataCGL_Curve.map((row, index) => [
+                index.toString(),
+                (row as DictionaryType)["MONTHLY_DEFAULT_RATE"].toString(),
+              ])}
+              order={2}
+              xAxisLabel="Period"
+              yAxisLabel="Default Rate (%)"
             />
           </div>
 
