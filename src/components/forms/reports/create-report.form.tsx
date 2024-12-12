@@ -11,12 +11,22 @@ import { createReportFormSchema } from "@/types/report.type";
 import { z } from "zod";
 import { useRouter } from "next/navigation";
 import { toast } from "@/hooks/core/use-toast";
+import { useState } from "react";
 
 const CreateReportForm = () => {
   const { isLoading } = useReportUpload();
   const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (values: any) => {
+    if (isSubmitting) return;
+    
+    setIsSubmitting(true);
+    toast({
+      title: "Submitting Report",
+      description: "Your report is being processed...",
+    });
+
     const formData = new FormData();
     const typedValues = values as z.infer<typeof createReportFormSchema>;
 
@@ -41,6 +51,11 @@ const CreateReportForm = () => {
       const data = await response.json();
       console.log("Response from Flask:", data);
 
+      toast({
+        title: "Success",
+        description: "Report created successfully",
+      });
+
       // Assuming Flask returns an ID in the response
       router.push(`/dashboard/reports/d/${data.report_id}`);
     } catch (error) {
@@ -50,6 +65,8 @@ const CreateReportForm = () => {
         description: "Failed to create report. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -70,37 +87,40 @@ const CreateReportForm = () => {
             config_file: {
               fieldType: "file",
               inputProps: {
-                disabled: isLoading,
+                disabled: isLoading || isSubmitting,
               },
             },
             data_file: {
               fieldType: "file",
               inputProps: {
-                disabled: isLoading,
+                disabled: isLoading || isSubmitting,
               },
             },
             report_name: {
               fieldType: "textarea",
               inputProps: {
                 placeholder: "Report Name",
-                disabled: isLoading,
+                disabled: isLoading || isSubmitting,
               },
             },
             description: {
               fieldType: "textarea",
               inputProps: {
                 placeholder: "Description",
-                disabled: isLoading,
+                disabled: isLoading || isSubmitting,
               },
             },
           }}
         >
-          <AutoFormSubmit {...{ isLoading }}>Submit</AutoFormSubmit>
+          <AutoFormSubmit isLoading={isLoading || isSubmitting}>
+            Submit
+          </AutoFormSubmit>
         </AutoForm>
       </div>
     </div>
   );
 };
+
 interface CsvColumnItemProps {
   column_name: string;
   header: string;
