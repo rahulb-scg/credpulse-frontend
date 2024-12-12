@@ -23,7 +23,7 @@ const ReportDetailModule = ({
   data: DictionaryType;
   isLoading: boolean;
 }) => {
-  console.log(data);
+  console.log("data:", data);
 
   if (isLoading && !data?.id)
     return (

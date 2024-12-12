@@ -9,39 +9,32 @@ import { DataTableColumnHeader } from "@/components/dataTable/data-table-column-
 
 export const reportColumns: ColumnDef<any>[] = [
   {
-    accessorKey: "type",
-    header: "Model",
-    cell: ({ row }) => {
-      const value: keyof typeof reportModelEnum = row.getValue("type");
-      return reportModelEnum[value];
-    },
+    accessorKey: "title",
+    header: "Report Name",
+    cell: ({ row }) => row.getValue("title"),
     enableSorting: true,
   },
   {
-    accessorKey: "file.name",
-    header: "Input File",
-    // cell: ({ row }) => {
-    //   const value: string = row.getValue("report_name");
-    //   const [type, key] = value?.split("/");
-    //   const [filename] = key.split("-");
-    //   return filename;
-    // },
+    accessorKey: "model",
+    header: "Model Type",
+    cell: ({ row }) => {
+      const value: keyof typeof reportModelEnum = row.getValue("model");
+      return reportModelEnum[value];
+    },
   },
-
   {
     accessorKey: "status",
     header: "Status",
     cell: ({ row }) => {
-      const rejectedAt = row?.original?.rejected_at;
-      const processedAt = row?.original?.processed_at;
-      if (rejectedAt)
+      const status = row.getValue("status");
+      if (status === "rejected")
         return (
           <div className="flex items-center gap-2 text-destructive">
             <Icons.alertIcon className="h-4 w-4" />
             Rejected
           </div>
         );
-      if (processedAt)
+      if (status === "completed")
         return (
           <div className="flex items-center gap-2 text-green-500">
             <Icons.shieldCheck className="h-4 w-4" />
@@ -58,16 +51,14 @@ export const reportColumns: ColumnDef<any>[] = [
     },
   },
   {
-    accessorKey: "created_at",
-    // header: "Added At",
+    accessorKey: "created_date",
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title="ADDED AT" />
+      <DataTableColumnHeader column={column} title="Created At" />
     ),
     enableSorting: true,
     sortingFn: "datetime",
-
     cell: ({ row }) => {
-      return DateUtils.displayDate(row?.original.created_at, true);
+      return DateUtils.displayDate(row.getValue("created_date"), true);
     },
   },
   {

@@ -1,61 +1,38 @@
-import { DictionaryType } from "@/types/common.type";
-import { APIResponse, ApiService } from "@/utils/api-service.utils";
+"use client";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
 
 interface UseQueryListProps {
   endPoint: string;
-  isLoggedIn?: boolean;
-  method?: "getAll" | "search";
-  searchParams?: DictionaryType;
+  searchParams?: {
+    page: number;
+    page_size: number;
+    [key: string]: any;
+  };
 }
 
-interface GetQueryListReturnProps<TData>
-  extends Omit<CustomQueryListReturnProps<TData>, "data"> {
-  data: TData[];
-}
-interface CustomQueryListProps<TData> {
-  queryFunction: () => Promise<APIResponse<TData>>;
-  extraQueryKey: any[];
-  disableNetwork?: boolean;
-}
-interface CustomQueryListReturnProps<TData> {
-  isLoading?: boolean;
-  data: TData;
-}
-const useQueryList = <TData>({
-  endPoint,
-  isLoggedIn = true,
-  method = "getAll",
-  searchParams,
-}: UseQueryListProps): GetQueryListReturnProps<TData> => {
-  const { data, isLoading } = useCustomQueryList({
-    queryFunction: async () => {
-      const service = new ApiService(endPoint);
-      // if (isLoggedIn)
-      //   service.headers.Authorization = `Bearer ${session.data?.access_token}`;
-      if (method === "getAll") {
-        return await service.getAll();
-      }
-      return await service.search(searchParams as any);
-    },
-    extraQueryKey: [`get all ${endPoint}`, searchParams],
-    // disableNetwork: !session?.data?.access_token,
-  });
-  return { data: data as TData[], isLoading };
-};
-
-const useCustomQueryList = <TData>({
-  queryFunction,
-  extraQueryKey,
-  disableNetwork,
-}: CustomQueryListProps<TData>): CustomQueryListReturnProps<TData> => {
+const useQueryList = <TData>({ endPoint, searchParams }: UseQueryListProps) => {
   const { data, isLoading } = useQuery({
-    queryKey: extraQueryKey,
-    queryFn: queryFunction,
-    enabled: !disableNetwork,
+    queryKey: [endPoint, searchParams],
+    queryFn: async () => {
+      const queryParams = new URLSearchParams({
+        page: searchParams?.page?.toString() || "1",
+        page_size: searchParams?.page_size?.toString() || "10",
+      });
+
+      const response = await fetch(`/api/${endPoint}?${queryParams}`);
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+      return response.json();
+    },
   });
-  return { data: data?.data as TData, isLoading };
+
+  return {
+    data: data?.data,
+    isLoading,
+    totalPages: data?.total_pages || 1,
+  };
 };
 
 export default useQueryList;

@@ -30,14 +30,13 @@ const ReportsPage = () => {
       rightComponent={<NewReport />}
       table={{
         columns: reportColumns,
-        searchKey: "type",
+        searchKey: "title",
         noDataFound: {
           title: "No Reports found !!",
           description: "Please create a new report.",
-
           customAction: <NewReport className="mt-4" />,
         },
-        endPoint: "reports/search",
+        endPoint: "listreports",
         onClickRow: (data) => {
           router.push(`/dashboard/reports/d/${data.id}`);
         },
@@ -61,6 +60,21 @@ const ReportsPage = () => {
             ],
             placeholder: "Select Status",
           },
+          {
+            key: "model",
+            type: "select",
+            options: [
+              {
+                label: "Univariate Analysis",
+                value: "univariates",
+              },
+              {
+                label: "TMAS",
+                value: "tmas",
+              },
+            ],
+            placeholder: "Select Model",
+          }
         ],
       }}
     />
