@@ -81,7 +81,7 @@ const GenerateReport = ({
             <Table className="relative w-full">
               <TableHeader className="border-b bg-muted sticky top-0 z-10">
                 <TableRow>
-                  <TableHead className="bg-muted text-primary min-w-[120px]">Month</TableHead>
+                  <TableHead className="bg-muted text-primary min-w-[120px]">Bucket</TableHead>
                   {getMatrixHeaders().map((label) => (
                     <TableHead className="border-l text-primary min-w-[100px]" key={label}>
                       {label}
@@ -144,11 +144,18 @@ const GenerateReport = ({
           </div>
 
           {/* CGL Curve Data Table */}
+          <div className="text-center text-lg font-medium text-muted-foreground mb-0">
+            CGL Curve Data
+          </div>
           <ScrollArea className="flex-1 rounded-md border">
             <Table className="relative w-full">
               <TableHeader className="border-b bg-muted sticky top-0 z-10">
                 <TableHead className="bg-muted text-primary min-w-[120px]">Month</TableHead>
-                {CGLCurveColumns?.map((column) => (
+                {CGLCurveColumns?.sort((a, b) => {
+                  if (a === 'Current') return -1;
+                  if (b === 'Current') return 1;
+                  return 0;
+                }).map((column) => (
                   <TableHead className="border-l text-primary min-w-[100px]" key={column}>
                     {column}
                   </TableHead>
@@ -161,7 +168,11 @@ const GenerateReport = ({
                       <TableCell className="w-auto bg-muted font-medium text-primary">
                         {CGLCurveRows[index]}
                       </TableCell>
-                      {CGLCurveColumns?.map((column) => {
+                      {CGLCurveColumns?.sort((a, b) => {
+                        if (a === 'Current') return -1;
+                        if (b === 'Current') return 1;
+                        return 0;
+                      }).map((column) => {
                         let value = (row as DictionaryType)?.[column];
                         if (typeof value === "number") {
                           value = value.toFixed(5);
