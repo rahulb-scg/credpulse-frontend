@@ -22,7 +22,6 @@ type Props = {
 const GenerateReport = ({
   type,
   modal,
-  overview,
 }: Props) => {
   const baseData = modal?.result?.data;
   console.log(baseData);
@@ -44,9 +43,9 @@ const GenerateReport = ({
 
     // Summary data for the overview table
     const summaryData = [
-      { label: "ALLL", value: modal?.result?.data?.ALLL ? `${modal.result.data.ALLL.toFixed(3)}%` : '-' },
-      { label: "CECL Factor", value: modal?.result?.data?.CECL ? `${modal.result.data.CECL.toFixed(3)}%` : '-' },
-      { label: "CECL Amount", value: modal?.result?.data?.CECL_AMOUNT ? `${modal.result.data.CECL_AMOUNT.toFixed(3)}%` : '-' },
+      { label: "ALLL", value: baseData?.ALLL ? `${baseData.ALLL.toFixed(3)}%` : '-' },
+      { label: "CECL Factor", value: baseData?.CECL ? `${baseData.CECL.toFixed(3)}%` : '-' },
+      { label: "CECL Amount", value: baseData?.CECL_AMOUNT ? `${baseData.CECL_AMOUNT.toFixed(3)}%` : '-' },
     ];
 
     // Helper function to get matrix column headers
