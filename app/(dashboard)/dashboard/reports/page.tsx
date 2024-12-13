@@ -1,44 +1,60 @@
-"use client";
-import GenericDataListing from "@/components/GenericDataListing/genericDataListing";
-import { buttonVariants } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-import { Plus } from "lucide-react";
-import Link from "next/link";
-import { reportColumns } from "./columns";
-import { useRouter } from "next/navigation";
+"use client"
+import GenericDataListing from "@/components/GenericDataListing/genericDataListing"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
+import { Plus, RotateCw } from "lucide-react"
+import Link from "next/link"
+import { reportColumns } from "./columns"
+import { useRouter } from "next/navigation"
+import { useState } from "react"
 
 const NewReport = ({ className }: { className?: string }) => {
   return (
-    <Link
-      href={"/dashboard/reports/c"}
-      className={cn(
-        buttonVariants({ variant: "outline", className, size: "sm" }),
-      )}
-    >
+    <Link href={"/dashboard/reports/c"} className={cn(buttonVariants({ variant: "outline", className, size: "sm" }))}>
       <Plus className="mr-2 h-4 w-4" /> Add New
     </Link>
-  );
-};
+  )
+}
 
 const ReportsPage = () => {
-  const router = useRouter();
+  const router = useRouter()
+  const [key, setKey] = useState(0)
+
+  const handleRefresh = () => {
+    setKey((prev) => prev + 1)
+    router.refresh()
+  }
+
   return (
     <GenericDataListing
+      key={key}
       title="Reports"
       description="Job Run Status Report"
       breadCrumbs={[{ title: "Reports", link: "/dashboard/reports" }]}
-      rightComponent={<NewReport />}
+      rightComponent={
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleRefresh}
+          >
+            <RotateCw className="mr-2 h-4 w-4" />
+            Refresh
+          </Button>
+          <NewReport />
+        </div>
+      }
       table={{
         columns: reportColumns,
         searchKey: "title",
         noDataFound: {
           title: "No Reports found !!",
           description: "Please create a new report.",
-          customAction: <NewReport className="mt-4" />,
+          customAction: <NewReport className="mt-4" />
         },
         endPoint: "listreports",
         onClickRow: (data) => {
-          router.push(`/dashboard/reports/d/${data.id}`);
+          router.push(`/dashboard/reports/d/${data.id}`)
         },
         filters: [
           {
@@ -47,18 +63,18 @@ const ReportsPage = () => {
             options: [
               {
                 label: "Approved",
-                value: "approved",
+                value: "approved"
               },
               {
                 label: "Rejected",
-                value: "rejected",
+                value: "rejected"
               },
               {
                 label: "Processing",
-                value: "processing",
-              },
+                value: "processing"
+              }
             ],
-            placeholder: "Select Status",
+            placeholder: "Select Status"
           },
           {
             key: "model",
@@ -66,19 +82,19 @@ const ReportsPage = () => {
             options: [
               {
                 label: "Univariate Analysis",
-                value: "univariates",
+                value: "univariates"
               },
               {
                 label: "TMAS",
-                value: "tmas",
-              },
+                value: "tmas"
+              }
             ],
-            placeholder: "Select Model",
+            placeholder: "Select Model"
           }
-        ],
+        ]
       }}
     />
-  );
-};
+  )
+}
 
-export default ReportsPage;
+export default ReportsPage
