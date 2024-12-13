@@ -44,12 +44,17 @@ const GenerateReport = ({
 
     // Summary data for the overview table
     const summaryData = [
+      { label: "Origination Amount of Loans in Snapshot ($)", value: baseData?.Origination_Amount ? formatCurrency(baseData.Origination_Amount) : '-'},
+      {label: "Snapshot Date", value: baseData?.Snapshot_Date ? baseData.Snapshot_Date : '-'},
       { label: "Opening Balance of Snapshot ($)", value: baseData?.Opening_Balance ? formatCurrency(baseData.Opening_Balance) : '-' },
+      { label: "Ending Balance of Snapshot ($)", value: baseData?.Ending_Balance ? formatCurrency(baseData.Ending_Balance) : '-' },
+      {label: "Forecasted Months (No. of Months)", value: baseData?.Forecasted_Months ? baseData.Forecasted_Months : '-'},
+      {label: "Forecast Period (From)", value: baseData?.Forecasted_Period_From ? baseData.Forecasted_Period_From : '-'},
+      {label: "Forecast Period (To)", value: baseData?.Forecasted_Period_To ? baseData.Forecasted_Period_To : '-'},
+      { label: "WAL", value: baseData?.WAL ? `${baseData.WAL.toFixed(1)} Years` : '-'},
       { label: "ALLL", value: baseData?.ALLL ? `${baseData.ALLL.toFixed(3)}%` : '-' },
       { label: "CECL Factor", value: baseData?.CECL_Factor ? `${baseData.CECL_Factor.toFixed(3)}%` : '-' },
       { label: "CECL Amount ($)", value: baseData?.CECL_Amount ? formatCurrency(baseData.CECL_Amount) : '-' },
-      { label: "Ending Balance of Snapshot ($)", value: baseData?.Ending_Balance ? formatCurrency(baseData.Ending_Balance) : '-' },
-      { label: "WARL", value: baseData?.WARL ? `${baseData.WARL.toFixed(1)} Years` : '-'}
     ];
 
     // Helper function to get matrix column headers
