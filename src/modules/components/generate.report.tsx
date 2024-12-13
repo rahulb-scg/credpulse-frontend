@@ -12,6 +12,7 @@ import ReportTableWrapper from "./report-table-wrapper";
 import Regression from "@/components/echarts/Regression";
 import { Separator } from "@radix-ui/react-select";
 import { TableUtils } from "@/utils/table.utils";
+import { roundToTwoDecimals, formatCurrency } from "@/utils/number.utils";
 
 type Props = {
   type: string;
@@ -43,9 +44,12 @@ const GenerateReport = ({
 
     // Summary data for the overview table
     const summaryData = [
+      { label: "Opening Balance of Snapshot ($)", value: baseData?.Opening_Balance ? formatCurrency(baseData.Opening_Balance) : '-' },
       { label: "ALLL", value: baseData?.ALLL ? `${baseData.ALLL.toFixed(3)}%` : '-' },
-      { label: "CECL Factor", value: baseData?.CECL ? `${baseData.CECL.toFixed(3)}%` : '-' },
-      { label: "CECL Amount", value: baseData?.CECL_AMOUNT ? `${baseData.CECL_AMOUNT.toFixed(3)}%` : '-' },
+      { label: "CECL Factor", value: baseData?.CECL_Factor ? `${baseData.CECL_Factor.toFixed(3)}%` : '-' },
+      { label: "CECL Amount ($)", value: baseData?.CECL_Amount ? formatCurrency(baseData.CECL_Amount) : '-' },
+      { label: "Ending Balance of Snapshot ($)", value: baseData?.Ending_Balance ? formatCurrency(baseData.Ending_Balance) : '-' },
+      { label: "WARL", value: baseData?.WARL ? `${baseData.WARL.toFixed(1)} Years` : '-'}
     ];
 
     // Helper function to get matrix column headers
