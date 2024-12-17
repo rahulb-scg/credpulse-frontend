@@ -2,6 +2,8 @@ import { authOptions } from "@/constants/auth.option";
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";
 import clientPromise from "@/lib/mongodb";
+import { ScanCommand } from "@aws-sdk/client-dynamodb";
+import { docClient } from "@/lib/dynamodb";
 
 export const POST = async (req: NextRequest) => {
   const session = await getServerSession(authOptions);

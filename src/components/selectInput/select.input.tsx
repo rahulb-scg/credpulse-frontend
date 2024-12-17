@@ -1,14 +1,8 @@
-import { useUncontrolled } from "@/hooks/core/use-uncontrolled.hook";
-import { SelectInputProps, SelectValueType } from "@/types/select-input.type";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "../ui/select";
-import { useMemo } from "react";
-import { Icons } from "../ui/icons";
+import { useUncontrolled } from "@/hooks/core/use-uncontrolled.hook"
+import { SelectInputProps, SelectValueType } from "@/types/select-input.type"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select"
+import { useMemo } from "react"
+import { Icons } from "../ui/icons"
 
 const SelectInput = ({
   value: valueProps,
@@ -16,34 +10,24 @@ const SelectInput = ({
   onChange,
   options,
   className,
-  placeholder,
+  placeholder
 }: SelectInputProps<SelectValueType>) => {
   const [value, onValueChange] = useUncontrolled({
     value: valueProps,
     defaultValue,
-    onChange,
-  });
+    onChange
+  })
   const displayValue = useMemo(() => {
-    return options.find((option) => option?.value === value)?.label;
-  }, [options, value]);
+    return options.find((option) => option?.value === value)?.label
+  }, [options, value])
   const displayPlaceholder = (
-    <span className="text-sm font-medium text-muted-foreground">
-      {placeholder ?? "Select Options"}
-    </span>
-  );
+    <span className="text-sm font-medium text-muted-foreground">{placeholder ?? "Select Options"}</span>
+  )
 
   return (
-    <Select
-      onValueChange={onValueChange}
-      defaultValue={defaultValue as string}
-      value={value as string}
-    >
+    <Select onValueChange={onValueChange} defaultValue={defaultValue as string} value={value as string}>
       <SelectTrigger className={className}>
-        {displayValue ? (
-          <SelectValue>{displayValue}</SelectValue>
-        ) : (
-          displayPlaceholder
-        )}
+        {displayValue ? <SelectValue>{displayValue}</SelectValue> : displayPlaceholder}
         {/* {displayValue && (
           <Icons.x
             onClick={(e) => {
@@ -62,7 +46,7 @@ const SelectInput = ({
         ))}
       </SelectContent>
     </Select>
-  );
-};
+  )
+}
 
-export default SelectInput;
+export default SelectInput
