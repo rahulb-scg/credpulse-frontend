@@ -3,7 +3,8 @@ import EChartsWrapper from "@components/echarts/EChartsWrapper"
 import * as echarts from "echarts"
 // @ts-ignore
 import { transform } from "echarts-stat"
-import React from "react"
+import React, { useEffect } from "react"
+import { logger } from "@/lib/logger"
 
 interface RegressChartProps {
   title: string
@@ -13,48 +14,35 @@ interface RegressChartProps {
   yAxisLabel?: string
 }
 
-export enum RegressionPattern {
-  LINEAR = "linear",
-  POLYNOMIAL = "polynomial"
-}
-
-export function getFakeRegressionData(pointCount: number, pattern: string, order?: number): number[][] {
-  const data = []
-
-  switch (pattern) {
-    case RegressionPattern.LINEAR:
-      for (let i = 0; i < pointCount; i++) {
-        const x = Math.random() * 100
-        const y = 2 * x + Math.random() * 10
-        data.push([x, y])
-      }
-      break
-    case RegressionPattern.POLYNOMIAL:
-      for (let i = 0; i < pointCount; i++) {
-        const x = Math.random() * 100
-        const y = Math.pow(x, 2) + Math.random() * 10
-        data.push([x, y])
-      }
-      break
-    default:
-      for (let i = 0; i < pointCount; i++) {
-        const x = Math.random() * 100
-        const y = 2 * x + Math.random() * 10
-        data.push([x, y])
-      }
-      break
-  }
-  return data
-}
-
 const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabel, yAxisLabel }) => {
-  echarts.registerTransform(transform.regression)
-  console.log(data)
+  useEffect(() => {
+    echarts.registerTransform(transform.regression)
+  }, [])
 
-  let chartOption: echarts.EChartsOption = {
+  // Validate and transform data
+  const validData = data.filter((point) => {
+    const [x, y] = point
+    return !isNaN(parseFloat(x)) && !isNaN(parseFloat(y))
+  })
+
+  if (validData.length < 2) {
+    logger.error("Insufficient valid data points for regression", {
+      totalPoints: data.length,
+      validPoints: validData.length
+    })
+    return <div>Insufficient data for regression analysis</div>
+  }
+
+  logger.info("Preparing regression chart", {
+    title,
+    dataPoints: validData.length,
+    order
+  })
+
+  const chartOption: echarts.EChartsOption = {
     dataset: [
       {
-        source: data.map((d) => [parseFloat(d[0]).toFixed(5), parseFloat(d[1]).toFixed(5)])
+        source: validData.map(([x, y]) => [parseFloat(x), parseFloat(y)])
       },
       {
         transform: {
@@ -75,7 +63,16 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabe
       trigger: "axis",
       axisPointer: {
         type: "cross"
+      },
+      formatter: function (params: any) {
+        const point = params[0]
+        return `${xAxisLabel || "X"}: ${point.data[0]}<br/>${yAxisLabel || "Y"}: ${roundToTwoDecimals(point.data[1])}%`
       }
+    },
+    grid: {
+      left: "10%",
+      right: "10%",
+      bottom: "15%"
     },
     xAxis: {
       splitLine: {
@@ -87,7 +84,7 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabe
       nameLocation: "middle",
       nameGap: 40,
       nameTextStyle: {
-        fontSize: 16
+        fontSize: 14
       }
     },
     yAxis: {
@@ -100,22 +97,33 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabe
       nameLocation: "middle",
       nameGap: 70,
       nameTextStyle: {
-        fontSize: 16
+        fontSize: 14
+      },
+      axisLabel: {
+        formatter: "{value}%"
       }
     },
     series: [
       {
-        name: "scatter",
+        name: "Actual",
         type: "scatter",
-        datasetIndex: 0
+        datasetIndex: 0,
+        symbolSize: 6,
+        itemStyle: {
+          color: "#5470c6"
+        }
       },
       {
-        name: "line",
+        name: "Regression",
         type: "line",
         smooth: true,
         datasetIndex: 1,
         symbolSize: 0.1,
         symbol: "circle",
+        lineStyle: {
+          color: "#91cc75",
+          width: 2
+        },
         label: { show: false },
         labelLayout: { dx: -20 },
         encode: { label: 2, tooltip: 1 }
@@ -123,7 +131,11 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabe
     ]
   }
 
-  return <EChartsWrapper option={chartOption} />
+  return (
+    <div className="w-full h-[400px]">
+      <EChartsWrapper option={chartOption} />
+    </div>
+  )
 }
 
 export default Regression

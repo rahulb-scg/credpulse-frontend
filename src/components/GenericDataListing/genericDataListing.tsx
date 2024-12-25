@@ -1,93 +1,82 @@
-"use client";
-import { useState } from "react";
-import useQueryList from "@/hooks/core/useQueryList.hook";
-import { DictionaryType } from "@/types/common.type";
-import { SelectInputOptions } from "@/types/select-input.type";
-import { subDays } from "date-fns";
-import { DataTable, DataTableProps } from "../dataTable/data-table";
-import DashboardContainer from "../layout/dashboard-container";
-import SelectInput from "../selectInput/select.input";
-import { DateRangePicker } from "../ui/date-range-picker";
-import { Pagination } from "../ui/pagination";
-import { ColumnDef } from "@tanstack/react-table";
+"use client"
+import { useState } from "react"
+import useQueryList from "@/hooks/core/useQueryList.hook"
+import { DictionaryType } from "@/types/common.type"
+import { SelectInputOptions } from "@/types/select-input.type"
+import { DataTable, DataTableProps } from "../dataTable/data-table"
+import DashboardContainer from "../layout/dashboard-container"
+import SelectInput from "../selectInput/select.input"
+import { Pagination } from "../ui/pagination"
+import { ColumnDef } from "@tanstack/react-table"
 
 interface FilterProps {
-  key: string;
-  type: "select";
-  options: SelectInputOptions[];
-  placeholder: string;
+  key: string
+  type: "select"
+  options: SelectInputOptions[]
+  placeholder: string
 }
 
 interface GenericTableProps extends Omit<DataTableProps<any, any>, "data"> {
-  endPoint: string;
-  method?: "getAll" | "post";
-  queryString?: string;
-  filters?: FilterProps[];
+  endPoint: string
+  method?: "getAll" | "post"
+  queryString?: string
+  filters?: FilterProps[]
 }
 
 interface GenericDataListingProps {
-  title: string;
-  description: string;
-  breadCrumbs: { title: string; link: string; }[];
-  rightComponent: React.ReactElement;
+  title: string
+  description: string
+  breadCrumbs: { title: string; link: string }[]
+  rightComponent: React.ReactElement
   table: {
-    columns: ColumnDef<any>[];
-    searchKey: string;
+    columns: ColumnDef<any>[]
+    searchKey: string
     noDataFound: {
-      title: string;
-      description: string;
-      customAction: React.ReactElement;
-    };
-    endPoint: string;
-    onClickRow: (data: any) => void;
+      title: string
+      description: string
+      customAction: React.ReactElement
+    }
+    endPoint: string
+    onClickRow: (data: any) => void
     filters: {
-      key: string;
-      type: string;
-      options: { label: string; value: string; }[];
-      placeholder: string;
-    }[];
-  };
+      key: string
+      type: string
+      options: { label: string; value: string }[]
+      placeholder: string
+    }[]
+  }
 }
 
-const GenericDataListing = ({
-  title,
-  description,
-  breadCrumbs,
-  rightComponent,
-  table
-}: GenericDataListingProps) => {
-  const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(20);
-  const [filterData, setFilterData] = useState<DictionaryType>({
-    date: {
-      start_date: subDays(new Date(), 365),
-      end_date: new Date(),
-    },
-  });
+const GenericDataListing = ({ title, description, breadCrumbs, rightComponent, table }: GenericDataListingProps) => {
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+  const [filterData, setFilterData] = useState<DictionaryType>({})
 
-  const { data, isLoading, totalPages } = useQueryList({
+  const { data, isLoading } = useQueryList({
     endPoint: table.endPoint,
     searchParams: {
       page,
       page_size: pageSize,
-      ...filterData,
-      date: {
-        start_date: filterData?.date?.start_date?.toISOString(),
-        end_date: filterData?.date?.end_date?.toISOString(),
-      },
-    },
-  });
+      ...filterData
+    }
+  })
 
   const handleChangeFilter = (key: string, value: any) => {
-    setFilterData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-    setPage(1); // Reset to first page when filter changes
-  };
+    if (!value) {
+      const newFilterData = { ...filterData }
+      delete newFilterData[key]
+      setFilterData(newFilterData)
+    } else {
+      setFilterData((prev) => ({
+        ...prev,
+        [key]: value
+      }))
+    }
+    setPage(1) // Reset to first page when filter changes
+  }
 
   return (
-    <DashboardContainer 
+    <DashboardContainer
       title={title}
       description={description}
       breadCrumbs={breadCrumbs}
@@ -108,30 +97,20 @@ const GenericDataListing = ({
                 className="w-[150px]"
               />
             ))}
-            <DateRangePicker
-              value={{
-                from: filterData?.date?.start_date,
-                to: filterData?.date?.end_date,
-              }}
-              onChange={(value) => {
-                handleChangeFilter("date", {
-                  start_date: value?.from,
-                  end_date: value?.to,
-                });
-              }}
-            />
           </div>
         }
       />
-      <div className="mt-4 flex justify-end">
-        <Pagination
-          currentPage={page}
-          totalPages={totalPages}
-          onPageChange={setPage}
-        />
-      </div>
+      {data?.pagination && (
+        <div className="mt-4 flex justify-end">
+          <Pagination
+            currentPage={data.pagination.page}
+            totalPages={data.pagination.totalPages}
+            onPageChange={setPage}
+          />
+        </div>
+      )}
     </DashboardContainer>
-  );
-};
+  )
+}
 
-export default GenericDataListing;
+export default GenericDataListing

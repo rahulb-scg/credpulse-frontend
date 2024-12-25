@@ -17,7 +17,6 @@ export const POST = async (req: NextRequest) => {
 
   const key = `${time}-${uuid}-${file.name}`;
   const input_key = `input/${key}`;
-  // console.log("key:", key);
 
   // save file to s3
   const command = new PutObjectCommand({

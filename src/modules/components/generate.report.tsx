@@ -1,209 +1,328 @@
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { DictionaryType } from "@/types/common.type";
-import ReportTableWrapper from "./report-table-wrapper";
-import Regression from "@/components/echarts/Regression";
-import { Separator } from "@radix-ui/react-select";
-import { TableUtils } from "@/utils/table.utils";
-import { roundToTwoDecimals, formatCurrency } from "@/utils/number.utils";
+import React from "react"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { DictionaryType } from "@/types/common.type"
+import ReportTableWrapper from "./report-table-wrapper"
+import Regression from "@/components/echarts/Regression"
+import { logger } from "@/lib/logger"
+import { DateUtils } from "@/utils/date.utils"
+import { Separator } from "@/components/ui/separator"
+
+interface ModelMetrics {
+  origination_amount: number
+  opening_balance: number
+  ending_balance: number
+  forecasted_months: number
+  wal: number
+  alll: number
+  cecl_factor: number
+  cecl_amount: number
+  snapshot_date: string
+  forecasted_period_from: string
+  forecasted_period_to: string
+}
+
+interface CGLCurveData {
+  data: number[][]
+  columns: string[]
+  index: string[]
+}
+
+interface TransitionMatrixData {
+  data: number[][]
+  columns: string[]
+  index: string[]
+}
+
+interface ModelOutputs {
+  cgl_curve: {
+    data: CGLCurveData
+  }
+  transition_matrix: {
+    data: TransitionMatrixData
+  }
+  metrics: ModelMetrics
+}
+
+interface Metadata {
+  modelName: string
+  status: string
+  createdAt: string
+}
 
 type Props = {
-  type: string;
-  modal: DictionaryType;
-  overview: DictionaryType;
-};
+  type: string
+  modal: ModelOutputs
+  overview: DictionaryType
+  metadata: Metadata
+}
 
-const GenerateReport = ({
-  type,
-  modal,
-}: Props) => {
-  const baseData = modal?.result?.data;
-  console.log(baseData);
-  if (!modal) return <></>;
-  if (type === "tmas") {
-    // Transform raw data into table-friendly format
-    const jsonDataCGLCurve = baseData?.CGL_Curve;
-    const transitionalMatrix = baseData?.Transition_Matrix;
+interface SummaryItem {
+  label: string
+  value: string
+}
 
-    const {
-      columns: CGLCurveColumns,
-      rows: dataCGL_Curve,
-      rowHeaders: CGLCurveRows,
-    } = TableUtils.transformToTableData(jsonDataCGLCurve, {
-      rowKeyPrefix: "Period_",
-      sortRows: true,
-      formatValue: (value) => typeof value === "number" ? value.toFixed(5) : value,
-    });
+const GenerateReport = ({ type, modal, overview, metadata }: Props) => {
+  logger.info("Rendering GenerateReport", { type })
 
-    // Summary data for the overview table
-    const summaryData = [
-      { label: "Origination Amount of Loans in Snapshot ($)", value: baseData?.Origination_Amount ? formatCurrency(baseData.Origination_Amount) : '-'},
-      {label: "Snapshot Date", value: baseData?.Snapshot_Date ? baseData.Snapshot_Date : '-'},
-      { label: "Opening Balance of Snapshot ($)", value: baseData?.Opening_Balance ? formatCurrency(baseData.Opening_Balance) : '-' },
-      { label: "Ending Balance of Snapshot ($)", value: baseData?.Ending_Balance ? formatCurrency(baseData.Ending_Balance) : '-' },
-      {label: "Forecasted Months (No. of Months)", value: baseData?.Forecasted_Months ? baseData.Forecasted_Months : '-'},
-      {label: "Forecast Period (From)", value: baseData?.Forecasted_Period_From ? baseData.Forecasted_Period_From : '-'},
-      {label: "Forecast Period (To)", value: baseData?.Forecasted_Period_To ? baseData.Forecasted_Period_To : '-'},
-      { label: "WAL", value: baseData?.WAL ? `${baseData.WAL.toFixed(1)} Years` : '-'},
-      { label: "ALLL", value: baseData?.ALLL ? `${baseData.ALLL.toFixed(3)}%` : '-' },
-      { label: "CECL Factor", value: baseData?.CECL_Factor ? `${baseData.CECL_Factor.toFixed(3)}%` : '-' },
-      { label: "CECL Amount ($)", value: baseData?.CECL_Amount ? formatCurrency(baseData.CECL_Amount) : '-' },
-    ];
+  if (!modal) {
+    logger.error("No model data provided")
+    return null
+  }
 
-    // Helper function to get matrix column headers
-    const getMatrixHeaders = () => ['Current', ...Object.keys(transitionalMatrix || {}).filter(key => key !== 'Current')];
+  // Extract data from the model outputs
+  const cglCurveData = modal.cgl_curve?.data
+  const transitionMatrix = modal.transition_matrix?.data
+  const metrics = modal.metrics
 
-    return (
-      <div className="flex flex-col gap-8 w-full max-w-[1200px] mx-auto">
-        {/* Summary Table */}
-        <ReportTableWrapper title="Transition Matrix Analysis (with weighted average) Report">
-          <ScrollArea className="flex-1 rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[250px]">Summary</TableHead>
-                  <TableHead>Value</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {summaryData.map((row, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{row.label}</TableCell>
-                    <TableCell>{row.value}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </ScrollArea>
-        </ReportTableWrapper>
+  if (!cglCurveData || !transitionMatrix || !metrics) {
+    logger.error("Missing required data in model outputs", {
+      hasCGLCurve: !!cglCurveData,
+      hasTransitionMatrix: !!transitionMatrix,
+      hasMetrics: !!metrics
+    })
+    return null
+  }
 
-        {/* Transition Matrix Table */}
-        <ReportTableWrapper title="Transition Matrix">
-          <ScrollArea className="flex-1 rounded-md border">
-            <Table className="relative w-full">
-              <TableHeader className="border-b bg-muted sticky top-0 z-10">
-                <TableRow>
-                  <TableHead className="bg-muted text-primary min-w-[120px]">Bucket</TableHead>
-                  {getMatrixHeaders().map((label) => (
-                    <TableHead className="border-l text-primary min-w-[100px]" key={label}>
-                      {label}
-                    </TableHead>
+  // Transform CGL curve data for table display
+  const { data: cglData, columns: cglColumns, index: cglPeriods } = cglCurveData
+
+  // Format data for graphs
+  const formatGraphData = (data: number[][], periodIndex: number, valueIndex: number): string[][] => {
+    return data.map((row, index) => {
+      const period = index.toString() // Use numeric index for x-axis
+      const value = row[valueIndex]?.toString() || "0"
+      return [period, value]
+    })
+  }
+
+  // Prepare graph data
+  const cglGraphData = formatGraphData(cglData, 0, cglColumns.indexOf("Charged Off"))
+  const monthlyDefaultRateData = formatGraphData(cglData, 0, cglColumns.indexOf("MONTHLY_DEFAULT_RATE"))
+
+  logger.info("Graph data prepared", {
+    cglDataPoints: cglGraphData.length,
+    monthlyDefaultDataPoints: monthlyDefaultRateData.length,
+    columns: cglColumns
+  })
+
+  // Summary data for the overview table
+  const reportDetails: SummaryItem[][] = [
+    [
+      {
+        label: "Report Name",
+        value: overview.report_name || "-"
+      },
+      {
+        label: "Description",
+        value: overview.description || "-"
+      }
+    ],
+    [
+      {
+        label: "Model Type",
+        value: metadata.modelName
+      },
+      {
+        label: "Status",
+        value: metadata.status
+      }
+    ],
+    [
+      {
+        label: "Created At",
+        value: DateUtils.displayDate(metadata.createdAt)
+      },
+      {
+        label: "Snapshot Date",
+        value: metrics.snapshot_date || "-"
+      }
+    ]
+  ]
+
+  const metricsData: SummaryItem[][] = [
+    [
+      {
+        label: "Origination Amount",
+        value: metrics.origination_amount ? `$${metrics.origination_amount.toLocaleString()}` : "-"
+      },
+      {
+        label: "Opening Balance",
+        value: metrics.opening_balance ? `$${metrics.opening_balance.toLocaleString()}` : "-"
+      }
+    ],
+    [
+      {
+        label: "Ending Balance",
+        value: metrics.ending_balance ? `$${metrics.ending_balance.toLocaleString()}` : "-"
+      },
+      {
+        label: "Forecasted Months",
+        value: metrics.forecasted_months?.toString() || "-"
+      }
+    ],
+    [
+      {
+        label: "Forecast Period",
+        value: `${metrics.forecasted_period_from} to ${metrics.forecasted_period_to}`
+      },
+      {
+        label: "WAL",
+        value: metrics.wal ? `${metrics.wal.toFixed(1)} Years` : "-"
+      }
+    ],
+    [
+      {
+        label: "ALLL",
+        value: metrics.alll ? `${(metrics.alll * 100).toFixed(3)}%` : "-"
+      },
+      {
+        label: "CECL Factor",
+        value: metrics.cecl_factor ? `${(metrics.cecl_factor * 100).toFixed(3)}%` : "-"
+      }
+    ],
+    [
+      {
+        label: "CECL Amount",
+        value: metrics.cecl_amount ? `$${metrics.cecl_amount.toLocaleString()}` : "-"
+      }
+    ]
+  ]
+
+  return (
+    <div className="flex flex-col gap-8 w-full max-w-[1200px] mx-auto">
+      {/* Summary Table */}
+      <ReportTableWrapper title="Report Summary">
+        <ScrollArea className="flex-1 rounded-md border">
+          <Table>
+            <TableBody>
+              {/* Report Details Section */}
+              <TableRow>
+                <TableCell colSpan={4} className="bg-muted/50 font-semibold text-primary">
+                  Report Details
+                </TableCell>
+              </TableRow>
+              {reportDetails.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <React.Fragment key={`${rowIndex}-${cellIndex}`}>
+                      <TableCell className="bg-muted/20 font-medium w-[200px]">{cell.label}</TableCell>
+                      <TableCell className="w-[300px]">{cell.value}</TableCell>
+                    </React.Fragment>
                   ))}
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {getMatrixHeaders().map((rowLabel) => (
-                  <TableRow key={rowLabel}>
-                    <TableCell className="w-auto bg-muted font-medium text-primary">
-                      {rowLabel}
-                    </TableCell>
-                    {getMatrixHeaders().map((columnLabel) => {
-                      let value = transitionalMatrix[columnLabel][rowLabel];
-                      if (typeof value === "number") {
-                        value = value.toFixed(5);
-                      }
-                      return (
-                        <TableCell className="border-l" key={columnLabel}>
-                          {value}
-                        </TableCell>
-                      );
-                    })}
-                  </TableRow>
+              ))}
+
+              {/* Metrics Section */}
+              <TableRow>
+                <TableCell colSpan={4} className="bg-muted/50 font-semibold text-primary">
+                  Model Metrics
+                </TableCell>
+              </TableRow>
+              {metricsData.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  {row.map((cell, cellIndex) => (
+                    <React.Fragment key={`${rowIndex}-${cellIndex}`}>
+                      <TableCell className="bg-muted/20 font-medium w-[200px]">{cell.label}</TableCell>
+                      <TableCell className="w-[300px]">{cell.value}</TableCell>
+                    </React.Fragment>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </ScrollArea>
+      </ReportTableWrapper>
+
+      {/* Transition Matrix Table */}
+      <ReportTableWrapper title="Transition Matrix">
+        <ScrollArea className="flex-1 rounded-md border">
+          <Table className="relative w-full">
+            <TableHeader className="border-b bg-muted sticky top-0 z-10">
+              <TableRow>
+                <TableHead className="bg-muted text-primary min-w-[120px]">Bucket</TableHead>
+                {transitionMatrix.columns.map((header) => (
+                  <TableHead className="border-l text-primary min-w-[100px]" key={header}>
+                    {header}
+                  </TableHead>
                 ))}
-              </TableBody>
-            </Table>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </ReportTableWrapper>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {transitionMatrix.data.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  <TableCell className="w-auto bg-muted font-medium text-primary">
+                    {transitionMatrix.index[rowIndex]}
+                  </TableCell>
+                  {row.map((value, colIndex) => (
+                    <TableCell className="border-l" key={colIndex}>
+                      {value.toFixed(5)}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </ReportTableWrapper>
 
-        {/* CGL Curve Analysis Section */}
-        <ReportTableWrapper title="CGL Curve Analysis">
-          {/* CGL Graph */}
-          <div className="flex justify-center mb-6">
-            <Regression
-              title="Cumulative Gross Loss"
-              data={dataCGL_Curve.map((row, index) => [
-                index.toString(),
-                (row as DictionaryType)["Charged Off"].toString(),
-              ])}
-              order={2}
-              xAxisLabel="Period"
-              yAxisLabel="Cumulative Loss (%)"
-            />
-          </div>
-          {/* Monthly Default Rate Graph */}
-          <div className="flex justify-center mb-6">
-            <Regression
-              title="Monthly Default Rate"
-              data={dataCGL_Curve.map((row, index) => [
-                index.toString(),
-                (row as DictionaryType)["MONTHLY_DEFAULT_RATE"].toString(),
-              ])}
-              order={2}
-              xAxisLabel="Period"
-              yAxisLabel="Default Rate (%)"
-            />
-          </div>
+      {/* CGL Curve Analysis Section */}
+      <ReportTableWrapper title="CGL Curve Analysis">
+        {/* CGL Graph */}
+        <div className="flex justify-center mb-6">
+          <Regression
+            title="Cumulative Gross Loss"
+            data={cglGraphData}
+            order={2}
+            xAxisLabel="Period"
+            yAxisLabel="Cumulative Loss (%)"
+          />
+        </div>
 
-          {/* CGL Curve Data Table */}
-          <div className="text-center text-lg font-medium text-muted-foreground mb-0">
-            CGL Curve Data
-          </div>
-          <ScrollArea className="flex-1 rounded-md border">
-            <Table className="relative w-full">
-              <TableHeader className="border-b bg-muted sticky top-0 z-10">
-                <TableHead className="bg-muted text-primary min-w-[120px]">Month</TableHead>
-                {CGLCurveColumns?.sort((a, b) => {
-                  if (a === 'Current') return -1;
-                  if (b === 'Current') return 1;
-                  return 0;
-                }).map((column) => (
+        {/* Monthly Default Rate Graph */}
+        <div className="flex justify-center mb-6">
+          <Regression
+            title="Monthly Default Rate"
+            data={monthlyDefaultRateData}
+            order={2}
+            xAxisLabel="Period"
+            yAxisLabel="Default Rate (%)"
+          />
+        </div>
+
+        {/* CGL Curve Data Table */}
+        <div className="text-center text-lg font-medium text-muted-foreground mb-4">CGL Curve Data</div>
+        <ScrollArea className="flex-1 rounded-md border">
+          <Table className="relative w-full">
+            <TableHeader className="border-b bg-muted sticky top-0 z-10">
+              <TableRow>
+                <TableHead className="bg-muted text-primary min-w-[120px]">Period</TableHead>
+                {cglColumns.map((column) => (
                   <TableHead className="border-l text-primary min-w-[100px]" key={column}>
                     {column}
                   </TableHead>
                 ))}
-              </TableHeader>
-              <TableBody>
-                {dataCGL_Curve?.map((row, index) => {
-                  return (
-                    <TableRow key={index}>
-                      <TableCell className="w-auto bg-muted font-medium text-primary">
-                        {CGLCurveRows[index]}
-                      </TableCell>
-                      {CGLCurveColumns?.sort((a, b) => {
-                        if (a === 'Current') return -1;
-                        if (b === 'Current') return 1;
-                        return 0;
-                      }).map((column) => {
-                        let value = (row as DictionaryType)?.[column];
-                        if (typeof value === "number") {
-                          value = value.toFixed(5);
-                        }
-                        return (
-                          <TableCell className="border-l" key={column}>
-                            {value}
-                          </TableCell>
-                        );
-                      })}
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </ReportTableWrapper>
-      </div>
-    );
-  }
-  return <></>;
-};
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {cglData.map((row, rowIndex) => (
+                <TableRow key={rowIndex}>
+                  <TableCell className="w-auto bg-muted font-medium text-primary">{cglPeriods[rowIndex]}</TableCell>
+                  {row.map((value, colIndex) => (
+                    <TableCell className="border-l" key={colIndex}>
+                      {value?.toFixed(5) || "-"}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
+      </ReportTableWrapper>
+    </div>
+  )
+}
 
-export default GenerateReport;
+export default GenerateReport

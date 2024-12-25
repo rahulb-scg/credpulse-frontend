@@ -1,14 +1,13 @@
-"use client";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+"use client"
+import { useQuery } from "@tanstack/react-query"
 
 interface UseQueryListProps {
-  endPoint: string;
+  endPoint: string
   searchParams?: {
-    page: number;
-    page_size: number;
-    [key: string]: any;
-  };
+    page: number
+    page_size: number
+    [key: string]: any
+  }
 }
 
 const useQueryList = <TData>({ endPoint, searchParams }: UseQueryListProps) => {
@@ -17,22 +16,23 @@ const useQueryList = <TData>({ endPoint, searchParams }: UseQueryListProps) => {
     queryFn: async () => {
       const queryParams = new URLSearchParams({
         page: searchParams?.page?.toString() || "1",
-        page_size: searchParams?.page_size?.toString() || "10",
-      });
+        page_size: searchParams?.page_size?.toString() || "20"
+      })
 
-      const response = await fetch(`/api/${endPoint}?${queryParams}`);
+      const response = await fetch(`/api/${endPoint}?${queryParams}`)
       if (!response.ok) {
-        throw new Error("Network response was not ok");
+        throw new Error("Network response was not ok")
       }
-      return response.json();
-    },
-  });
+      const jsonData = await response.json()
+      return jsonData
+    }
+  })
 
   return {
-    data: data?.data,
+    data,
     isLoading,
-    totalPages: data?.total_pages || 1,
-  };
-};
+    totalPages: data?.pagination?.totalPages || 1
+  }
+}
 
-export default useQueryList;
+export default useQueryList

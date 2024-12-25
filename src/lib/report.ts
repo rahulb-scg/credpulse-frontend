@@ -50,7 +50,6 @@ export async function runReport(
   const bucket = "credpulse-reports-bucket";
   const key = `${file.name}-${time}-${uuid}`;
   const input_key = `input/${key}`;
-  // console.log("key:", key);
 
   // save file to s3
   const command = new PutObjectCommand({

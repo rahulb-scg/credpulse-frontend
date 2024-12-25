@@ -18,26 +18,35 @@ const NewReport = ({ className }: { className?: string }) => {
 
 const ReportsPage = () => {
   const router = useRouter()
-  const [key, setKey] = useState(0)
+  const [refreshKey, setRefreshKey] = useState(0)
 
-  const handleRefresh = () => {
-    setKey((prev) => prev + 1)
-    router.refresh()
+  const handleRefresh = async () => {
+    try {
+      // Invalidate the current cache by triggering a new API call
+      await fetch("/api/listreports", {
+        method: "GET",
+        cache: "no-store" // Ensures we don't use cached data
+      })
+
+      // Update the key to force a re-render of GenericDataListing
+      setRefreshKey((prev) => prev + 1)
+
+      // Also refresh the router to ensure any route-based caching is cleared
+      router.refresh()
+    } catch (error) {
+      console.error("Error refreshing reports:", error)
+    }
   }
 
   return (
     <GenericDataListing
-      key={key}
+      key={refreshKey}
       title="Reports"
       description="Job Run Status Report"
       breadCrumbs={[{ title: "Reports", link: "/dashboard/reports" }]}
       rightComponent={
         <div className="flex gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleRefresh}
-          >
+          <Button variant="outline" size="sm" onClick={handleRefresh}>
             <RotateCw className="mr-2 h-4 w-4" />
             Refresh
           </Button>
@@ -46,7 +55,7 @@ const ReportsPage = () => {
       }
       table={{
         columns: reportColumns,
-        searchKey: "title",
+        searchKey: "report_name",
         noDataFound: {
           title: "No Reports found !!",
           description: "Please create a new report.",
@@ -54,7 +63,7 @@ const ReportsPage = () => {
         },
         endPoint: "listreports",
         onClickRow: (data) => {
-          router.push(`/dashboard/reports/d/${data.id}`)
+          router.push(`/dashboard/reports/d/${data._id}`)
         },
         filters: [
           {
@@ -62,12 +71,12 @@ const ReportsPage = () => {
             type: "select",
             options: [
               {
-                label: "Approved",
-                value: "approved"
+                label: "Completed",
+                value: "Success"
               },
               {
-                label: "Rejected",
-                value: "rejected"
+                label: "Failed",
+                value: "failed"
               },
               {
                 label: "Processing",
@@ -77,19 +86,15 @@ const ReportsPage = () => {
             placeholder: "Select Status"
           },
           {
-            key: "model",
+            key: "type",
             type: "select",
             options: [
               {
-                label: "Univariate Analysis",
-                value: "univariates"
-              },
-              {
-                label: "TMAS",
-                value: "tmas"
+                label: "TMM1",
+                value: "TMM1"
               }
             ],
-            placeholder: "Select Model"
+            placeholder: "Select Model Type"
           }
         ]
       }}

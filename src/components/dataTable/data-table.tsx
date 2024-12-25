@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   ColumnDef,
@@ -7,35 +7,28 @@ import {
   getCoreRowModel,
   getFilteredRowModel,
   getSortedRowModel,
-  useReactTable,
-} from "@tanstack/react-table";
+  useReactTable
+} from "@tanstack/react-table"
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { cn } from "@/lib/utils";
-import { CommonUtils } from "@/utils/common.utils";
-import React, { ReactNode } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import NoDataFound, { NoDataFoundProps } from "../ui/noDataFound";
-import { ScrollArea, ScrollBar } from "../ui/scroll-area";
-import { DataTableLoading } from "./data-table-loading";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
+import { CommonUtils } from "@/utils/common.utils"
+import React, { ReactNode } from "react"
+import { Button } from "../ui/button"
+import { Input } from "../ui/input"
+import NoDataFound, { NoDataFoundProps } from "../ui/noDataFound"
+import { ScrollArea, ScrollBar } from "../ui/scroll-area"
+import { DataTableLoading } from "./data-table-loading"
 
 export interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[];
-  data: TData[];
-  searchKey: string;
-  enableSerialNumber?: boolean;
-  rightComponent?: ReactNode;
-  onClickRow?: (row: TData, index: number) => void;
-  isLoading?: boolean;
-  noDataFound?: NoDataFoundProps;
+  columns: ColumnDef<TData, TValue>[]
+  data: TData[]
+  searchKey: string
+  enableSerialNumber?: boolean
+  rightComponent?: ReactNode
+  onClickRow?: (row: TData, index: number) => void
+  isLoading?: boolean
+  noDataFound?: NoDataFoundProps
 }
 
 export function DataTable<TData, TValue>({
@@ -46,9 +39,17 @@ export function DataTable<TData, TValue>({
   rightComponent,
   onClickRow,
   isLoading,
-  noDataFound,
+  noDataFound
 }: DataTableProps<TData, TValue>) {
-  const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [sorting, setSorting] = React.useState<SortingState>(() => {
+    const savedSort = localStorage.getItem("tableSortingState")
+    return savedSort ? JSON.parse(savedSort) : [{ id: "created_at", desc: true }]
+  })
+
+  React.useEffect(() => {
+    localStorage.setItem("tableSortingState", JSON.stringify(sorting))
+  }, [sorting])
+
   const table = useReactTable({
     data,
     columns,
@@ -58,9 +59,9 @@ export function DataTable<TData, TValue>({
     getSortedRowModel: getSortedRowModel(),
 
     state: {
-      sorting,
-    },
-  });
+      sorting
+    }
+  })
   /* this can be used to get the selectedrows 
   console.log("value", table.getFilteredSelectedRowModel()); */
 
@@ -70,9 +71,7 @@ export function DataTable<TData, TValue>({
         <Input
           placeholder={`Search ${searchKey}...`}
           value={(table.getColumn(searchKey)?.getFilterValue() as string) ?? ""}
-          onChange={(event) =>
-            table.getColumn(searchKey)?.setFilterValue(event.target.value)
-          }
+          onChange={(event) => table.getColumn(searchKey)?.setFilterValue(event.target.value)}
           className="min-w-[200px] lg:max-w-sm"
         />
         {rightComponent}
@@ -85,23 +84,15 @@ export function DataTable<TData, TValue>({
               <TableHeader>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <TableRow key={headerGroup.id}>
-                    {enableSerialNumber && (
-                      <TableHead key={"#"}>#Sn.</TableHead>
-                    )}
+                    {enableSerialNumber && <TableHead key={"#"}>#Sn.</TableHead>}
                     {headerGroup.headers.map((header) => {
                       return (
-                        <TableHead
-                          key={header.id}
-                          className="text-xs uppercase"
-                        >
+                        <TableHead key={header.id} className="text-xs uppercase">
                           {header.isPlaceholder
                             ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
+                            : flexRender(header.column.columnDef.header, header.getContext())}
                         </TableHead>
-                      );
+                      )
                     })}
                   </TableRow>
                 ))}
@@ -114,28 +105,18 @@ export function DataTable<TData, TValue>({
                       data-state={row.getIsSelected() && "selected"}
                       onClick={() => onClickRow?.(row?.original, index)}
                       className={cn({
-                        "cursor-pointer": CommonUtils.isFunction(onClickRow),
+                        "cursor-pointer": CommonUtils.isFunction(onClickRow)
                       })}
                     >
-                      {enableSerialNumber && (
-                        <TableCell>{index + 1}.</TableCell>
-                      )}
+                      {enableSerialNumber && <TableCell>{index + 1}.</TableCell>}
                       {row.getVisibleCells().map((cell) => (
-                        <TableCell key={cell.id}>
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext(),
-                          )}
-                        </TableCell>
+                        <TableCell key={cell.id}>{flexRender(cell.column.columnDef.cell, cell.getContext())}</TableCell>
                       ))}
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell
-                      colSpan={columns.length + 1}
-                      className=" flex-1 items-center justify-center"
-                    >
+                    <TableCell colSpan={columns.length + 1} className=" flex-1 items-center justify-center">
                       <NoDataFound className="pt-8" {...noDataFound} />
                     </TableCell>
                   </TableRow>
@@ -146,8 +127,8 @@ export function DataTable<TData, TValue>({
           </ScrollArea>
           <div className="flex items-center justify-end space-x-2 py-4">
             <div className="flex-1 text-sm text-muted-foreground">
-              {table.getFilteredSelectedRowModel().rows.length} of{" "}
-              {table.getFilteredRowModel().rows.length} row(s) selected.
+              {table.getFilteredSelectedRowModel().rows.length} of {table.getFilteredRowModel().rows.length} row(s)
+              selected.
             </div>
             <div className="space-x-2">
               <Button
@@ -158,12 +139,7 @@ export function DataTable<TData, TValue>({
               >
                 Previous
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => table.nextPage()}
-                disabled={!table.getCanNextPage()}
-              >
+              <Button variant="outline" size="sm" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>
                 Next
               </Button>
             </div>
@@ -171,5 +147,5 @@ export function DataTable<TData, TValue>({
         </>
       )}
     </>
-  );
+  )
 }
