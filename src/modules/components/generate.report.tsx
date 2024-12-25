@@ -269,26 +269,29 @@ const GenerateReport = ({ type, modal, overview, metadata }: Props) => {
 
       {/* CGL Curve Analysis Section */}
       <ReportTableWrapper title="CGL Curve Analysis">
-        {/* CGL Graph */}
-        <div className="flex justify-center mb-6">
-          <Regression
-            title="Cumulative Gross Loss"
-            data={cglGraphData}
-            order={2}
-            xAxisLabel="Period"
-            yAxisLabel="Cumulative Loss (%)"
-          />
-        </div>
+        {/* Graphs Row */}
+        <div className="flex flex-row gap-4 mb-6">
+          {/* CGL Graph */}
+          <div className="flex-1">
+            <Regression
+              title="Cumulative Gross Loss"
+              data={cglGraphData}
+              order={2}
+              xAxisLabel="Period"
+              yAxisLabel="Cumulative Loss (%)"
+            />
+          </div>
 
-        {/* Monthly Default Rate Graph */}
-        <div className="flex justify-center mb-6">
-          <Regression
-            title="Monthly Default Rate"
-            data={monthlyDefaultRateData}
-            order={2}
-            xAxisLabel="Period"
-            yAxisLabel="Default Rate (%)"
-          />
+          {/* Monthly Default Rate Graph */}
+          <div className="flex-1">
+            <Regression
+              title="Monthly Default Rate"
+              data={monthlyDefaultRateData}
+              order={2}
+              xAxisLabel="Period"
+              yAxisLabel="Default Rate (%)"
+            />
+          </div>
         </div>
 
         {/* CGL Curve Data Table */}
