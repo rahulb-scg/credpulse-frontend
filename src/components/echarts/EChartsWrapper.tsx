@@ -1,64 +1,57 @@
-"use client";
+"use client"
 
-import * as echarts from "echarts";
-import { useTheme } from "next-themes";
-import React, { useEffect, useRef, useState } from "react";
+import * as echarts from "echarts"
+import { useTheme } from "next-themes"
+import React, { useEffect, useRef, useState } from "react"
 
 export interface EChartsWrapperProps {
-  option: echarts.EChartsOption;
-  className?: string;
-  isLoading?: boolean;
+  option: echarts.EChartsOption
+  className?: string
+  isLoading?: boolean
 }
 
-const EChartsWrapper: React.FC<EChartsWrapperProps> = ({
-  option,
-  className,
-  isLoading = false,
-}) => {
-  const chartRef = useRef<HTMLDivElement | null>(null);
-  const [chart, setChart] = useState<echarts.ECharts>();
-  const { resolvedTheme } = useTheme();
-
-  const mountChart = () => {
-    if (!chartRef.current) return;
-
-    const newChart = echarts.init(chartRef.current, resolvedTheme ?? "light");
-    newChart.setOption(option);
-    setChart(newChart);
-  };
-
-  const unmountChart = () => {
-    chart?.dispose();
-    setChart(undefined);
-  };
-
-  const handleResize = () => {
-    if (!chart) return;
-
-    chart?.resize();
-  };
+const EChartsWrapper: React.FC<EChartsWrapperProps> = ({ option, className, isLoading = false }) => {
+  const chartRef = useRef<HTMLDivElement | null>(null)
+  const [chart, setChart] = useState<echarts.ECharts>()
+  const { resolvedTheme } = useTheme()
 
   useEffect(() => {
-    window.addEventListener("resize", handleResize);
+    // Initialize chart
+    if (!chartRef.current) return
 
+    const newChart = echarts.init(chartRef.current, resolvedTheme ?? "light")
+    setChart(newChart)
+
+    // Handle resize
+    const handleResize = () => {
+      newChart?.resize()
+    }
+    window.addEventListener("resize", handleResize)
+
+    // Cleanup
     return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, []);
+      window.removeEventListener("resize", handleResize)
+      newChart.dispose()
+    }
+  }, [resolvedTheme])
 
   useEffect(() => {
-    mountChart();
+    if (!chart) return
 
+    // Set loading state
     if (isLoading) {
-      chart?.showLoading();
+      chart.showLoading()
     } else {
-      chart?.hideLoading();
+      chart.hideLoading()
     }
 
-    return () => {
-      unmountChart();
-    };
-  }, [option, resolvedTheme]);
+    try {
+      // Set chart options
+      chart.setOption(option, true)
+    } catch (error) {
+      console.error("Error setting chart options:", error)
+    }
+  }, [chart, option, isLoading])
 
   return (
     <div
@@ -66,10 +59,10 @@ const EChartsWrapper: React.FC<EChartsWrapperProps> = ({
       className={className}
       style={{
         width: "100%",
-        height: "50vh",
+        height: "50vh"
       }}
     />
-  );
-};
+  )
+}
 
-export default EChartsWrapper;
+export default EChartsWrapper
