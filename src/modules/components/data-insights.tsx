@@ -51,9 +51,19 @@ const DataInsights: React.FC<DataInsightsProps> = ({ analysis_extensions }) => {
     const periods = Object.keys(distributionData).sort()
     const [selectedPeriod, setSelectedPeriod] = useState(periods[periods.length - 1])
 
+    // Define delinquency bucket labels
+    const delinquencyLabels: { [key: string]: string } = {
+      "0": "Current",
+      "1": "30dpd",
+      "2": "60dpd",
+      "3": "90dpd",
+      "4": "Charged Off",
+      "99": "Unknown"
+    }
+
     // Prepare data for the doughnut chart
     const chartData = Object.entries(distributionData[selectedPeriod]).map(([status, count]) => ({
-      name: status === "99" ? "Unknown" : `${status} days`,
+      name: delinquencyLabels[status] || `Bucket ${status}`,
       value: count
     }))
 
@@ -74,7 +84,7 @@ const DataInsights: React.FC<DataInsightsProps> = ({ analysis_extensions }) => {
     const areaChartData = {
       categories: periods,
       series: top6Statuses.map((status) => ({
-        name: status === "99" ? "Unknown" : `${status} days`,
+        name: delinquencyLabels[status] || `Bucket ${status}`,
         data: periods.map((period) => distributionData[period][status] || 0)
       }))
     }
