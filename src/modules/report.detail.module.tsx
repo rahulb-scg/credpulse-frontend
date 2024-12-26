@@ -44,8 +44,7 @@ const ReportDetailModule = ({ data, isLoading }: { data: DictionaryType; isLoadi
     )
   }
 
-  const analysisExtensions = data?.analysis_extensions
-  if (!analysisExtensions) {
+  if (!data?.analysis_extensions) {
     logger.error("No analysis extensions found in report data")
     return (
       <Alert variant="destructive">
@@ -70,7 +69,7 @@ const ReportDetailModule = ({ data, isLoading }: { data: DictionaryType; isLoadi
       {
         title: "Data Insights",
         key: "data-insights",
-        component: <DataInsights analysis_extensions={analysisExtensions} />,
+        component: <DataInsights response={data} />,
         isVisible: true
       },
       {

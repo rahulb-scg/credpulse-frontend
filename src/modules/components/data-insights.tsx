@@ -23,7 +23,7 @@ const logger = {
 }
 
 interface DataInsightsProps {
-  analysis_extensions: DictionaryType[]
+  response: DictionaryType
 }
 
 interface PeriodData {
@@ -34,9 +34,10 @@ interface DistributionData {
   [period: string]: PeriodData
 }
 
-const DataInsights: React.FC<DataInsightsProps> = ({ analysis_extensions }) => {
+const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
   logger.info("Component rendering started")
 
+  const analysis_extensions = response?.analysis_extensions
   if (!analysis_extensions?.[0]?.period_distributions || !analysis_extensions?.[0]?.summary) {
     logger.warn("No data found in analysis_extensions")
     return null
