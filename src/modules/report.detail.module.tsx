@@ -7,7 +7,7 @@ import { DateUtils } from "@/utils/date.utils"
 import { ReactNode } from "react"
 import GenerateReport from "./components/generate.report"
 import { logger } from "@/lib/logger"
-import DataInsights from "./components/univariate-report"
+import DataInsights from "./components/data-insights"
 
 const ReportDetailModule = ({ data, isLoading }: { data: DictionaryType; isLoading: boolean }) => {
   logger.info("Rendering ReportDetailModule", { reportId: data?._id })
