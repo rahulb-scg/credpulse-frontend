@@ -1,184 +1,153 @@
 "use client"
 
-import { ScrollBar } from "@/components/ui/scroll-area"
-import { TableHeader, TableHead, TableBody, TableRow, TableCell, Table } from "@/components/ui/table"
+import React, { useState } from "react"
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+import { Table, TableHeader, TableHead, TableBody, TableRow, TableCell } from "@/components/ui/table"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DictionaryType } from "@/types/common.type"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import BoxPlot from "@/components/echarts/BoxPlot"
-import Histogram from "@/components/echarts/Histogram"
-import PieChart from "@/components/echarts/PieChart"
-import React from "react"
 import ReportTableWrapper from "./report-table-wrapper"
+import HalfDoughnut from "@/components/echarts/HalfDoughnut"
+import StackedAreaChart from "@/components/echarts/StackedAreaChart"
 
-interface UnivariateReportProps {
-  modal: DictionaryType
+// Logger function for consistent logging format
+const logger = {
+  info: (message: string, data?: any) => {
+    console.log(`[DataInsights] INFO: ${message}`, data || "")
+  },
+  error: (message: string, error?: any) => {
+    console.error(`[DataInsights] ERROR: ${message}`, error || "")
+  },
+  warn: (message: string, data?: any) => {
+    console.warn(`[DataInsights] WARN: ${message}`, data || "")
+  }
 }
 
-const UnivariateReport: React.FC<UnivariateReportProps> = ({ modal }) => {
-  if (!modal?.univariates) return <></>
+interface DataInsightsProps {
+  analysis_extensions: DictionaryType[]
+}
 
-  const jsonData = JSON.parse(modal?.univariates)
-  const horizontalColumn = Object.keys(jsonData)
-  const data: DictionaryType[] = Object.values(jsonData)
-  const columns = Object.keys(data[0])
+interface PeriodData {
+  [key: string]: number
+}
 
-  // Function to extract numerical data for a specific column
-  const getColumnData = (columnName: string): number[] => {
-    return data
-      .map((row) => {
-        const value = row[columnName]
-        return typeof value === "number" ? value : NaN
+interface DistributionData {
+  [period: string]: PeriodData
+}
+
+const DataInsights: React.FC<DataInsightsProps> = ({ analysis_extensions }) => {
+  logger.info("Component rendering started")
+
+  if (!analysis_extensions?.[0]?.period_distributions || !analysis_extensions?.[0]?.summary) {
+    logger.warn("No data found in analysis_extensions")
+    return null
+  }
+
+  try {
+    const { period_distributions, summary } = analysis_extensions[0]
+    const distributionData = period_distributions as DistributionData
+    logger.info("Data extraction successful", { summary, periodsCount: Object.keys(distributionData).length })
+
+    // Get sorted periods for the select dropdown
+    const periods = Object.keys(distributionData).sort()
+    const [selectedPeriod, setSelectedPeriod] = useState(periods[periods.length - 1])
+
+    // Prepare data for the doughnut chart
+    const chartData = Object.entries(distributionData[selectedPeriod]).map(([status, count]) => ({
+      name: status === "99" ? "Unknown" : `${status} days`,
+      value: count
+    }))
+
+    // Prepare data for the stacked area chart
+    // Get top 6 delinquency statuses by total volume
+    const statusTotals = Object.values(distributionData).reduce((acc: PeriodData, periodData) => {
+      Object.entries(periodData).forEach(([status, count]) => {
+        acc[status] = (acc[status] || 0) + count
       })
-      .filter((val) => !isNaN(val))
-  }
+      return acc
+    }, {})
 
-  // Function to calculate basic statistics
-  const calculateStats = (columnName: string) => {
-    const numericData = getColumnData(columnName)
-    if (numericData.length === 0) return null
+    const top6Statuses = Object.entries(statusTotals)
+      .sort(([, a], [, b]) => b - a)
+      .slice(0, 6)
+      .map(([status]) => status)
 
-    const sum = numericData.reduce((a, b) => a + b, 0)
-    const mean = sum / numericData.length
-    const sortedData = [...numericData].sort((a, b) => a - b)
-    const median = sortedData[Math.floor(sortedData.length / 2)]
-    const min = Math.min(...numericData)
-    const max = Math.max(...numericData)
-
-    return {
-      mean: mean.toFixed(2),
-      median: median.toFixed(2),
-      min: min.toFixed(2),
-      max: max.toFixed(2),
-      count: numericData.length
+    const areaChartData = {
+      categories: periods,
+      series: top6Statuses.map((status) => ({
+        name: status === "99" ? "Unknown" : `${status} days`,
+        data: periods.map((period) => distributionData[period][status] || 0)
+      }))
     }
-  }
 
-  return (
-    <ReportTableWrapper title="Univariates Analysis Report">
-      <Tabs defaultValue="table" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="table">Table View</TabsTrigger>
-          <TabsTrigger value="distribution">Distribution</TabsTrigger>
-          <TabsTrigger value="boxplot">Box Plot</TabsTrigger>
-          <TabsTrigger value="summary">Summary</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="table">
-          <ScrollArea className="relative h-[calc(80vh-220px)] rounded-md border">
-            <Table>
-              <TableHeader className="sticky top-0 border-b bg-muted">
-                <TableHead className="bg-muted text-primary"></TableHead>
-                {columns?.map((column: string) => (
-                  <TableHead className="border-l text-primary" key={column}>
-                    {column}
-                  </TableHead>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {data?.map((row: DictionaryType, index: number) => (
-                  <TableRow key={index}>
-                    <TableCell className="w-auto bg-muted font-medium text-primary">
-                      {horizontalColumn[index]}
+    return (
+      <ReportTableWrapper title="Delinquency Distribution Analysis">
+        <div className="space-y-8">
+          <div className="w-1/2">
+            <ScrollArea className="flex-1 rounded-md border">
+              <Table>
+                <TableBody>
+                  {/* Summary Section */}
+                  <TableRow>
+                    <TableCell colSpan={2} className="bg-muted/50 font-semibold text-primary">
+                      Summary Statistics
                     </TableCell>
-                    {columns?.map((column: string) => {
-                      let value = row[column]
-                      if (typeof value === "number") value = value.toFixed(2)
-                      return (
-                        <TableCell className="border-l" key={column}>
-                          {value}
-                        </TableCell>
-                      )
-                    })}
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            <ScrollBar orientation="horizontal" />
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="distribution" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            {columns.map((column: string) => {
-              const numericData = getColumnData(column)
-              if (numericData.length === 0) return null
-              return (
-                <div key={column} className="rounded-lg border p-4">
-                  <Histogram data={numericData} title={`Distribution of ${column}`} label={column} bins={15} />
-                </div>
-              )
-            })}
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium w-[200px]">Total Loans</TableCell>
+                    <TableCell className="w-[300px]">{summary.total_loans.toLocaleString()}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium w-[200px]">Total Periods</TableCell>
+                    <TableCell className="w-[300px]">{summary.total_periods}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium w-[200px]">Start Period</TableCell>
+                    <TableCell className="w-[300px]">{summary.start_period}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium w-[200px]">End Period</TableCell>
+                    <TableCell className="w-[300px]">{summary.end_period}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium w-[200px]">Delinquency Statuses</TableCell>
+                    <TableCell className="w-[300px]">
+                      {summary.unique_delinquency_statuses
+                        .sort((a: number, b: number) => a - b)
+                        .map((status: number) => (status === 99 ? "Unknown" : status))
+                        .join(", ")}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
           </div>
-        </TabsContent>
 
-        <TabsContent value="boxplot" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            {columns.map((column: string) => {
-              const numericData = getColumnData(column)
-              if (numericData.length === 0) return null
-              return (
-                <div key={column} className="rounded-lg border p-4">
-                  <BoxPlot data={numericData} title={`Box Plot of ${column}`} label={column} />
-                </div>
-              )
-            })}
+          <div className="grid grid-cols-2 gap-8">
+            <div className="min-h-[500px]">
+              <HalfDoughnut
+                data={chartData}
+                title="Delinquency Distribution"
+                periods={periods}
+                selectedPeriod={selectedPeriod}
+                onPeriodChange={setSelectedPeriod}
+              />
+            </div>
+            <div className="min-h-[500px]">
+              <StackedAreaChart data={areaChartData} title="Delinquency Trends Over Time" />
+            </div>
           </div>
-        </TabsContent>
-
-        <TabsContent value="summary" className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            {columns.map((column: string) => {
-              const stats = calculateStats(column)
-              if (!stats) return null
-
-              const pieData = [
-                { value: parseFloat(stats.mean), name: "Mean" },
-                { value: parseFloat(stats.median), name: "Median" },
-                { value: parseFloat(stats.min), name: "Min" },
-                { value: parseFloat(stats.max), name: "Max" }
-              ]
-
-              return (
-                <div key={column} className="rounded-lg border p-4">
-                  <h3 className="mb-2 text-lg font-semibold">{column}</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <dl className="space-y-2">
-                        <div className="flex justify-between">
-                          <dt>Mean:</dt>
-                          <dd>{stats.mean}</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>Median:</dt>
-                          <dd>{stats.median}</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>Min:</dt>
-                          <dd>{stats.min}</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>Max:</dt>
-                          <dd>{stats.max}</dd>
-                        </div>
-                        <div className="flex justify-between">
-                          <dt>Count:</dt>
-                          <dd>{stats.count}</dd>
-                        </div>
-                      </dl>
-                    </div>
-                    <div>
-                      <PieChart data={pieData} title={`Summary of ${column}`} />
-                    </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </TabsContent>
-      </Tabs>
-    </ReportTableWrapper>
-  )
+        </div>
+      </ReportTableWrapper>
+    )
+  } catch (error) {
+    logger.error("Fatal error rendering DataInsights", error)
+    return (
+      <ReportTableWrapper title="Delinquency Distribution Analysis">
+        <div className="p-4 text-destructive">Error loading delinquency distribution data</div>
+      </ReportTableWrapper>
+    )
+  }
 }
 
-export default UnivariateReport
+export default DataInsights

@@ -7,7 +7,7 @@ import { DateUtils } from "@/utils/date.utils"
 import { ReactNode } from "react"
 import GenerateReport from "./components/generate.report"
 import { logger } from "@/lib/logger"
-import UnivariateReport from "./components/univariate-report"
+import DataInsights from "./components/univariate-report"
 
 const ReportDetailModule = ({ data, isLoading }: { data: DictionaryType; isLoading: boolean }) => {
   logger.info("Rendering ReportDetailModule", { reportId: data?._id })
@@ -44,6 +44,20 @@ const ReportDetailModule = ({ data, isLoading }: { data: DictionaryType; isLoadi
     )
   }
 
+  const analysisExtensions = data?.analysis_extensions
+  if (!analysisExtensions) {
+    logger.error("No analysis extensions found in report data")
+    return (
+      <Alert variant="destructive">
+        <Icons.alertIcon className="h-6 w-6" />
+        <AlertTitle>Invalid Report Data</AlertTitle>
+        <AlertDescription>The report data is missing required information.</AlertDescription>
+      </Alert>
+    )
+  } else {
+    logger.info("Analysis extensions found in report data", { reportId: data._id })
+  }
+
   logger.info("Processing report data", {
     reportId: data._id,
     modelName: data.model_name,
@@ -53,6 +67,12 @@ const ReportDetailModule = ({ data, isLoading }: { data: DictionaryType; isLoadi
   const tabProps: DataTabsProps = {
     className: "w-full container",
     tabs: [
+      {
+        title: "Data Insights",
+        key: "data-insights",
+        component: <DataInsights analysis_extensions={analysisExtensions} />,
+        isVisible: true
+      },
       {
         title: "Report Overview",
         key: "report-overview",
@@ -68,12 +88,6 @@ const ReportDetailModule = ({ data, isLoading }: { data: DictionaryType; isLoadi
             }}
           />
         ),
-        isVisible: true
-      },
-      {
-        title: "Univariate Report",
-        key: "univariate-report",
-        component: <UnivariateReport modal={modelOutputs} />,
         isVisible: true
       }
     ]
