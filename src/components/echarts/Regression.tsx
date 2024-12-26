@@ -6,6 +6,40 @@ import { transform } from "echarts-stat"
 import React, { useEffect } from "react"
 import { logger } from "@/lib/logger"
 
+export enum RegressionPattern {
+  LINEAR = "linear",
+  POLYNOMIAL = "polynomial",
+  EXPONENTIAL = "exponential",
+  LOGARITHMIC = "logarithmic"
+}
+
+export function getFakeRegressionData(
+  count: number,
+  pattern: RegressionPattern = RegressionPattern.LINEAR
+): string[][] {
+  const data: string[][] = []
+  for (let i = 0; i < count; i++) {
+    const x = i
+    let y: number
+    switch (pattern) {
+      case RegressionPattern.POLYNOMIAL:
+        y = 0.5 * Math.pow(x, 2) + 2 * x + Math.random() * 10
+        break
+      case RegressionPattern.EXPONENTIAL:
+        y = Math.exp(0.1 * x) + Math.random() * 5
+        break
+      case RegressionPattern.LOGARITHMIC:
+        y = 10 * Math.log(x + 1) + Math.random() * 5
+        break
+      case RegressionPattern.LINEAR:
+      default:
+        y = 2 * x + Math.random() * 10
+    }
+    data.push([x.toString(), y.toString()])
+  }
+  return data
+}
+
 interface RegressChartProps {
   title: string
   data: string[][]
