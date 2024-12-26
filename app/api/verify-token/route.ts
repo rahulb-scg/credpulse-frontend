@@ -1,40 +1,42 @@
-import { calculateSecretHash } from "@/constants/auth.option";
-import {
-  CognitoIdentityProviderClient,
-  ConfirmSignUpCommand,
-} from "@aws-sdk/client-cognito-identity-provider"; // ES Modules import
-import { NextRequest, NextResponse } from "next/server";
-// const { CognitoIdentityProviderClient, VerifySoftwareTokenCommand } = require("@aws-sdk/client-cognito-identity-provider"); // CommonJS import
-const userPoolId = process.env.USER_POOL_ID; // e.g., us-east-1_ydeMGTIr5
+import { calculateSecretHash } from "@/constants/auth.option"
+import { CognitoIdentityProviderClient, ConfirmSignUpCommand } from "@aws-sdk/client-cognito-identity-provider"
+import { NextRequest, NextResponse } from "next/server"
 
-const clientId = process.env.COGNITO_CLIENT_ID as string; // e.g., 4m0hag52dfnj127l4ijujfn5i6
-const clientSecret = process.env.COGNITO_CLIENT_SECRET as string;
-export const POST = async (req: NextRequest) => {
+const clientId = process.env.COGNITO_CLIENT_ID as string
+const clientSecret = process.env.COGNITO_CLIENT_SECRET as string
+
+export async function POST(req: NextRequest) {
+  console.log("[POST] /api/verify-token - Processing token verification")
   try {
-    const data = await req.json();
+    const data = await req.json()
+    console.log(`[POST] /api/verify-token - Verifying token for email: ${data?.email}`)
+
     const client = new CognitoIdentityProviderClient({
-      region: process.env.NEXT_PUBLIC_AWS_REGION,
-    });
-    const SecretHash = calculateSecretHash(data?.email);
+      region: process.env.NEXT_PUBLIC_AWS_REGION
+    })
+
+    const SecretHash = calculateSecretHash(data?.email)
     const input = {
-      // ConfirmSignUpRequest
       ClientId: clientId,
       SecretHash: SecretHash,
-      Username: data?.email, // required
-      ConfirmationCode: data?.code, // required
-    };
-    const command = new ConfirmSignUpCommand(input);
-    const response = await client.send(command);
-    console.log("response", response);
+      Username: data?.email,
+      ConfirmationCode: data?.code
+    }
+
+    const command = new ConfirmSignUpCommand(input)
+    const response = await client.send(command)
+    console.log("[POST] /api/verify-token - Successfully verified token")
+
     return NextResponse.json({
-      message: "Successfully confirmed",
-    });
+      message: "Successfully confirmed"
+    })
   } catch (error: any) {
+    console.error("[POST] /api/verify-token - Error:", error)
     return NextResponse.json(
       {
-        message: error?.message,
+        message: error?.message
       },
-      { status: 400 },
-    );
+      { status: 400 }
+    )
   }
-};
+}

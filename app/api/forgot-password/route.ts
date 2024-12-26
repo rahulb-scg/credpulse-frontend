@@ -1,39 +1,44 @@
-import { calculateSecretHash } from "@/constants/auth.option";
-import {
-  CognitoIdentityProviderClient,
-  ForgotPasswordCommand,
-} from "@aws-sdk/client-cognito-identity-provider";
-import { NextRequest, NextResponse } from "next/server";
-const clientId = process.env.COGNITO_CLIENT_ID as string; // e.g., 4m0hag52dfnj127l4ijujfn5i6
-const clientSecret = process.env.COGNITO_CLIENT_SECRET as string;
-export const POST = async (req: NextRequest) => {
-  try {
-    const data = await req.json();
-    const client = new CognitoIdentityProviderClient({
-      region: process.env.NEXT_PUBLIC_AWS_REGION,
-    });
-    const SecretHash = calculateSecretHash(data?.email);
-    const input = {
-      // ForgotPasswordRequest
-      ClientId: clientId, // required
-      SecretHash: SecretHash,
+import { calculateSecretHash } from "@/constants/auth.option"
+import { CognitoIdentityProviderClient, ForgotPasswordCommand } from "@aws-sdk/client-cognito-identity-provider"
+import { NextRequest, NextResponse } from "next/server"
 
-      Username: data?.email, // required
-    };
-    const command = new ForgotPasswordCommand(input);
-    await client.send(command);
+const clientId = process.env.COGNITO_CLIENT_ID as string
+const clientSecret = process.env.COGNITO_CLIENT_SECRET as string
+
+export async function POST(req: NextRequest) {
+  console.log("[POST] /api/forgot-password - Processing password reset request")
+  try {
+    const data = await req.json()
+    console.log(`[POST] /api/forgot-password - Initiating password reset for email: ${data?.email}`)
+
+    const client = new CognitoIdentityProviderClient({
+      region: process.env.NEXT_PUBLIC_AWS_REGION
+    })
+
+    const SecretHash = calculateSecretHash(data?.email)
+    const input = {
+      ClientId: clientId,
+      SecretHash: SecretHash,
+      Username: data?.email
+    }
+
+    const command = new ForgotPasswordCommand(input)
+    await client.send(command)
+    console.log("[POST] /api/forgot-password - Successfully initiated password reset")
+
     return NextResponse.json(
       {
-        email: data.email,
+        email: data.email
       },
-      { status: 201 },
-    );
+      { status: 201 }
+    )
   } catch (error: any) {
+    console.error("[POST] /api/forgot-password - Error:", error)
     return NextResponse.json(
       {
-        message: error?.message,
+        message: error?.message
       },
-      { status: 400 },
-    );
+      { status: 400 }
+    )
   }
-};
+}
