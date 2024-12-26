@@ -1,4 +1,4 @@
-import PolyChart, { PolyChartDataSet } from "@components/echarts/PolyChart";
+import PolyChart, { PolyChartDataSet } from "@components/echarts/PolyChart"
 import {
   Select,
   SelectContent,
@@ -6,100 +6,98 @@ import {
   SelectItem,
   SelectLabel,
   SelectTrigger,
-  SelectValue,
-} from "@components/ui/select";
-import React, { useEffect } from "react";
+  SelectValue
+} from "@components/ui/select"
+import React, { useEffect } from "react"
 
 export interface APRProps {
-  title: string;
-  data: any;
-  isLoading: boolean;
+  title: string
+  data: any
+  isLoading: boolean
 }
 
 export interface Row {
-  asOfDate: string;
-  apr: number;
-  loanId: string;
+  asOfDate: string
+  apr: number
+  loanId: string
 }
 
 const getUniqueIds = (data: Row[]) => {
-  return Array.from(new Set(data.map((row) => row.loanId)));
-};
+  return Array.from(new Set(data.map((row) => row.loanId)))
+}
 
 const getAllUniqueDates = (data: Row[]) => {
-  return Array.from(new Set(data.map((row) => row.asOfDate)));
-};
+  return Array.from(new Set(data.map((row) => row.asOfDate)))
+}
 
 const getParseData = (data: any): Row[] => {
-  const table: Row[] = [];
-  const jsonData = JSON.parse(data.processedReport.table);
+  const table: Row[] = []
+  const jsonData = JSON.parse(data.processedReport.table)
   jsonData.data.forEach((row: any) => {
     table.push({
       asOfDate: row.asofdate,
       apr: row.apr,
-      loanId: row.loanid,
-    });
-  });
+      loanId: row.loanid
+    })
+  })
 
-  return table;
-};
+  return table
+}
 
 const tableToDataset = (table: Row[], filterDate: Date): PolyChartDataSet => {
   const filteredTable = table.filter((item) => {
-    const date = new Date(item.asOfDate);
-    return date.toISOString() === filterDate.toISOString();
-  });
+    const date = new Date(item.asOfDate)
+    return date.toISOString() === filterDate.toISOString()
+  })
 
   const dataset: PolyChartDataSet = {
     name: "APR Scores",
     type: "bar",
     data: filteredTable.map((item) => ({
       name: item.loanId,
-      value: item.apr,
-    })),
-  };
-  return dataset;
-};
+      value: item.apr
+    }))
+  }
+  return dataset
+}
 
 const APR: React.FC<APRProps> = ({ title, data, isLoading }) => {
-  const [uniqueIds, setUniqueIds] = React.useState<string[]>([]);
-  const [asOfDate, setAsOfDate] = React.useState<Date>(new Date());
-  const [table, setTable] = React.useState<Row[]>([]);
-  const [datasets, setDatasets] = React.useState<PolyChartDataSet[]>([]);
+  const [uniqueIds, setUniqueIds] = React.useState<string[]>([])
+  const [asOfDate, setAsOfDate] = React.useState<Date>(new Date())
+  const [table, setTable] = React.useState<Row[]>([])
+  const [datasets, setDatasets] = React.useState<PolyChartDataSet[]>([])
 
   useEffect(() => {
-    if (!data || isLoading) return;
+    if (!data || isLoading) return
 
-    setTable(getParseData(data));
-  }, [isLoading]);
-
-  useEffect(() => {
-    if (table.length === 0) return;
-
-    setUniqueIds(getUniqueIds(table));
-
-    const lastDate = new Date(getAllUniqueDates(table).sort().reverse()[0]);
-    setAsOfDate(lastDate);
-  }, [table]);
+    setTable(getParseData(data))
+  }, [data, isLoading])
 
   useEffect(() => {
-    if (table.length === 0) return;
+    if (table.length === 0) return
 
-    setDatasets([tableToDataset(table, asOfDate)]);
-  }, [asOfDate]);
+    setUniqueIds(getUniqueIds(table))
+
+    const lastDate = new Date(getAllUniqueDates(table).sort().reverse()[0])
+    setAsOfDate(lastDate)
+  }, [table])
+
+  useEffect(() => {
+    if (table.length === 0) return
+
+    setDatasets([tableToDataset(table, asOfDate)])
+  }, [asOfDate, table])
 
   if (isLoading || !table) {
     return (
       <div>
-        <div className="text-center text-xl font-medium text-muted-foreground">
-          {title}
-        </div>
+        <div className="text-center text-xl font-medium text-muted-foreground">{title}</div>
         <div className="text-center text-xl font-medium text-muted-foreground">
           Please Wait for a while data is processing...
         </div>
         <span className="loading loading-spinner loading-lg"></span>
       </div>
-    );
+    )
   }
 
   return (
@@ -129,7 +127,7 @@ const APR: React.FC<APRProps> = ({ title, data, isLoading }) => {
 
       <PolyChart title="Normalized" xLabels={uniqueIds} datasets={datasets} />
     </>
-  );
-};
+  )
+}
 
-export default APR;
+export default APR
