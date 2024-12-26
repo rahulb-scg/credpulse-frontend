@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, context: { params: { id: string } }) {
+  const params = await Promise.resolve(context.params)
   const reportId = params.id
   console.log(`[GET] /api/reports/${reportId} - Fetching report`)
 
@@ -31,7 +32,8 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(req: NextRequest, context: { params: { id: string } }) {
+  const params = await Promise.resolve(context.params)
   const reportId = params.id
   console.log(`[DELETE] /api/reports/${reportId} - Deleting report`)
 
