@@ -16,6 +16,7 @@ const PerformanceAnalysis = ({
       </div>
       <div className="min-h-72 min-w-64">
         <LineStackChart
+          title="Loan Performance Over Time"
           categoryData={date}
           legends={Object.keys(restData || {}).map(
             (key: string) => key?.split("_").join(" ").toUpperCase(),

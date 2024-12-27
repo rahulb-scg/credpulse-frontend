@@ -75,18 +75,13 @@ interface AnalysisExtensions {
   [key: string]: BalanceTrends | DelinquencyDistribution
 }
 
-interface BackendResponse {
-  _id: string
-  analysis_extensions: AnalysisExtensions
-}
-
 interface DataInsightsProps {
-  response: BackendResponse
+  response: DictionaryType
 }
 
 const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
   logger.info("Initializing DataInsights component")
-  const { analysis_extensions } = response
+  const { analysis_extensions } = response as { analysis_extensions: AnalysisExtensions }
 
   // State for delinquency distribution
   const delinquencyDist = analysis_extensions["delinquency_distribution"] as DelinquencyDistribution
@@ -98,30 +93,11 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
     const periods = Object.keys(balanceTrends.period_statistics).sort()
 
     // Prepare data for line chart
-    const balanceData = {
-      categories: periods,
-      series: [
-        {
-          name: "Mean Balance",
-          data: periods.map((period) => balanceTrends.period_statistics[period].mean_balance)
-        },
-        {
-          name: "Median Balance",
-          data: periods.map((period) => balanceTrends.period_statistics[period].median_balance)
-        }
-      ]
-    }
+    const meanBalanceData = periods.map((period) => balanceTrends.period_statistics[period].mean_balance)
+    const medianBalanceData = periods.map((period) => balanceTrends.period_statistics[period].median_balance)
 
     // Prepare data for period over period changes
-    const popData = {
-      categories: periods,
-      series: [
-        {
-          name: "Period over Period Change (%)",
-          data: periods.map((period) => balanceTrends.period_over_period_changes[period] || 0)
-        }
-      ]
-    }
+    const popData = periods.map((period) => balanceTrends.period_over_period_changes[period] || 0)
 
     return (
       <ReportTableWrapper title="Balance Trends Analysis">
@@ -177,10 +153,22 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
 
           <div className="grid grid-cols-2 gap-8">
             <div className="min-h-[500px]">
-              <LineChart data={balanceData} title="Balance Trends Over Time" yAxisLabel="Balance ($)" />
+              <LineChart 
+                data={[meanBalanceData, medianBalanceData]} 
+                xAxisData={periods}
+                seriesNames={["Mean Balance", "Median Balance"]}
+                title="Balance Trends Over Time" 
+                yAxisLabel="Balance ($)" 
+              />
             </div>
             <div className="min-h-[500px]">
-              <LineChart data={popData} title="Period over Period Changes" yAxisLabel="Change (%)" />
+              <LineChart 
+                data={[popData]} 
+                xAxisData={periods}
+                seriesNames={["Period over Period Change (%)"]}
+                title="Period over Period Changes" 
+                yAxisLabel="Change (%)" 
+              />
             </div>
           </div>
         </div>

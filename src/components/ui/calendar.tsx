@@ -60,16 +60,7 @@ function Calendar({
         ...classNames,
       }}
       {...props}
-    >
-      <div className="flex items-center justify-between">
-        <button className="nav_button nav_button_previous">
-          <ChevronLeftIcon className="h-4 w-4" />
-        </button>
-        <button className="nav_button nav_button_next">
-          <ChevronRightIcon className="h-4 w-4" />
-        </button>
-      </div>
-    </DayPicker>
+    />
   );
 }
 
