@@ -37,7 +37,7 @@ export const AnimatedBarchart: React.FC<AnimatedHistogramProps> = ({
   yAxisLabel
 }) => {
   const colors = getChartColors(datasets.length);
-  const baseOptions = getBaseChartConfig(title, xAxisLabel, yAxisLabel, false);
+  const baseOptions = getBaseChartConfig(xAxisLabel, yAxisLabel);
 
   const chartOption: echarts.EChartsOption = {
     ...baseOptions,
@@ -88,7 +88,7 @@ export const AnimatedBarchart: React.FC<AnimatedHistogramProps> = ({
     animationEasing: "elasticOut"
   }
 
-  return <EChartsWrapper option={chartOption} />
+  return <EChartsWrapper option={chartOption} title={title} />
 }
 
 export default AnimatedBarchart

@@ -9,7 +9,7 @@ import { getBaseChartConfig } from "@/utils/chart.utils";
 
 interface ClusteringProps {
   title: string;
-  selector: React.ReactNode;
+  selector?: React.ReactNode;
   data: number[][];
   clusterCount: number;
   colors: string[];

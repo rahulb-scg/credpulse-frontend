@@ -8,7 +8,7 @@ interface LineStackChartDataItemProps {
 }
 interface LineStackChartProps {
   data: LineStackChartDataItemProps[];
-  title?: string;
+  title: string;
   legends: string[];
   categoryData: string[];
 }
@@ -22,9 +22,6 @@ const LineStackChart = ({
   const colors = getChartColors(data.length);
 
   const chartOption: echarts.EChartsOption = {
-    title: {
-      text: title,
-    },
     tooltip: {
       trigger: "axis",
     },
@@ -48,7 +45,7 @@ const LineStackChart = ({
       };
     }),
   };
-  return <EChartsWrapper option={chartOption} />;
+  return <EChartsWrapper option={chartOption} title={title} />;
 };
 
 export default LineStackChart;

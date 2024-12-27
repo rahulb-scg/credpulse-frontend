@@ -5,14 +5,18 @@ import { z } from "zod"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/core/use-toast"
 import { useState } from "react"
-import { DependencyType } from "@/components/autoForm/types"
+import { DependencyType, FieldConfig, ValueDependency } from "@/components/autoForm/types"
+import { ChangeEvent } from "react"
+import { SelectInputOptions } from "@/types/select-input.type"
+
+type FormValues = z.infer<typeof createReportFormSchema>;
 
 const CreateReportForm = () => {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [dataSourceType, setDataSourceType] = useState<"db" | "file">("file")
+  const [dataSourceType, setDataSourceType] = useState<FormValues["data_source_type"]>("file")
 
-  const handleSubmit = async (values: z.infer<typeof createReportFormSchema>) => {
+  const handleSubmit = async (values: FormValues) => {
     if (isSubmitting) return
 
     setIsSubmitting(true)
@@ -59,7 +63,7 @@ const CreateReportForm = () => {
     }
   }
 
-  const fieldConfig = {
+  const fieldConfig: FieldConfig<FormValues> = {
     data_source_type: {
       fieldType: "select",
       inputProps: {
@@ -68,9 +72,12 @@ const CreateReportForm = () => {
         options: [
           { label: "Database", value: "db" },
           { label: "CSV File", value: "file" }
-        ],
+        ] as SelectInputOptions[],
         disabled: isSubmitting,
-        onChange: (value: string) => setDataSourceType(value as "db" | "file")
+        onChange: (event: ChangeEvent<HTMLInputElement>) => {
+          const value = event.target.value as FormValues["data_source_type"]
+          setDataSourceType(value)
+        }
       }
     },
     config_file: {
@@ -103,12 +110,12 @@ const CreateReportForm = () => {
     }
   }
 
-  const dependencies = [
+  const dependencies: ValueDependency<FormValues>[] = [
     {
       sourceField: "data_source_type",
       type: DependencyType.HIDES,
       targetField: "data_file",
-      when: (sourceValue) => sourceValue === "db"
+      when: (sourceValue: FormValues["data_source_type"], targetValue: File | undefined) => sourceValue === "db"
     }
   ]
 

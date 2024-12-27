@@ -12,6 +12,9 @@ interface ThreeAxisBarChartProps {
   lowValText: string;
   highValText: string;
   selector?: string;
+  startColor?: string;
+  middleColor?: string;
+  endColor?: string;
 }
 
 export interface ThreeAxIsBarGraphDataItem {
@@ -45,6 +48,9 @@ export const ThreeAxisBarChart: React.FC<ThreeAxisBarChartProps> = ({
   lowValText,
   highValText,
   selector,
+  startColor = getChartColor(0),
+  middleColor = getChartColor(1),
+  endColor = getChartColor(2)
 }) => {
   const baseOptions = getBaseChartConfig();
 
@@ -72,7 +78,7 @@ export const ThreeAxisBarChart: React.FC<ThreeAxisBarChartProps> = ({
       text: [highValText, lowValText],
       dimension: 0,
       inRange: {
-        color: [getChartColor(0), getChartColor(1), getChartColor(2)],
+        color: [startColor, middleColor, endColor],
       },
     },
     series: [

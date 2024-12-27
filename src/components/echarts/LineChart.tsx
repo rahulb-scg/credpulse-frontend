@@ -1,94 +1,72 @@
 "use client"
 
-import { init } from "echarts"
-import type { EChartsOption } from "echarts"
-import React, { useEffect, useRef } from "react"
-import { getBaseChartConfig } from "@/utils/chart.utils"
-import EChartsWrapper from "./EChartsWrapper"
+import { getChartColors } from "@/utils/color.utils";
+import { getBaseChartConfig } from "@/utils/chart.utils";
+import EChartsWrapper from "@components/echarts/EChartsWrapper";
+import type { EChartsOption } from "echarts";
+import React from "react";
 
 interface LineChartProps {
-  data: {
-    categories: string[]
-    series: Array<{
-      name: string
-      data: number[]
-    }>
-  }
-  title: string
-  yAxisLabel?: string
-  xAxisLabel?: string
-  selector?: React.ReactNode
+  title: string;
+  data: number[][];
+  xAxisData: string[];
+  seriesNames: string[];
+  xAxisLabel?: string;
+  yAxisLabel?: string;
+  selector?: string;
 }
 
-const LineChart: React.FC<LineChartProps> = ({ 
-  data, 
-  title, 
-  yAxisLabel, 
+export function getFakeLineChartData(count: number) {
+  const data = [];
+  const xAxisData = [];
+  for (let i = 0; i < count; i++) {
+    xAxisData.push("A " + i);
+    data.push(Math.random() * 100);
+  }
+  return { data, xAxisData };
+}
+
+const LineChart: React.FC<LineChartProps> = ({
+  title,
+  data,
+  xAxisData,
+  seriesNames,
   xAxisLabel,
-  selector 
+  yAxisLabel,
+  selector
 }) => {
   // Create options
-  const baseOptions = getBaseChartConfig("", xAxisLabel, yAxisLabel, true) // Empty title as it's handled by container
+  const baseOptions = getBaseChartConfig(xAxisLabel, yAxisLabel) // Empty title as it's handled by container
   const options: EChartsOption = {
     ...baseOptions,
     tooltip: {
-      ...baseOptions.tooltip,
-      formatter: (params: any) => {
-        const date = params[0].axisValue
-        let tooltipContent = `<div style="margin: 0px 0 0;line-height:1;">
-          <div style="margin: 0px 0 0;line-height:1;">
-            <div style="font-size:14px;color:#666;font-weight:400;line-height:1;">
-              ${date}
-            </div>
-          </div>`
-        params.forEach((param: any) => {
-          tooltipContent += `<div style="margin: 10px 0 0;line-height:1;">
-            <div style="margin: 0px 0 0;line-height:1;">
-              <div style="margin: 0px 0 0;line-height:1;">
-                <span style="display:inline-block;margin-right:4px;border-radius:10px;width:10px;height:10px;background-color:${param.color};"></span>
-                <span style="font-size:14px;color:#666;font-weight:400;margin-left:2px">
-                  ${param.seriesName}:
-                </span>
-                <span style="float:right;margin-left:20px;font-size:14px;color:#666;font-weight:900">
-                  ${param.value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </span>
-              </div>
-            </div>
-          </div>`
-        })
-        tooltipContent += "</div>"
-        return tooltipContent
+      trigger: "axis",
+      axisPointer: {
+        type: "cross",
+        label: {
+          backgroundColor: "#6a7985"
+        }
       }
     },
     xAxis: {
-      type: 'category',
-      data: data.categories,
+      type: "category",
+      boundaryGap: false,
+      data: xAxisData,
       name: xAxisLabel,
-      nameLocation: 'middle',
-      nameGap: 35,
-      axisLabel: {
-        hideOverlap: true
-      }
+      nameLocation: "middle",
+      nameGap: 35
     },
-    series: data.series.map((item) => ({
-      name: item.name,
+    series: data.map((series, index) => ({
+      name: seriesNames[index],
       type: "line",
-      data: item.data,
-      smooth: true,
-      showSymbol: false,
+      data: series,
       emphasis: {
         focus: "series"
       }
     }))
-  }
+  };
 
-  return (
-    <EChartsWrapper 
-      option={options} 
-      title={title}
-      selector={selector}
-    />
-  )
-}
+  return <EChartsWrapper option={options} title={title} selector={selector} />;
+};
 
-export default LineChart
+export default LineChart;
