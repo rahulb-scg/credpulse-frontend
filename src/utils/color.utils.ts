@@ -36,6 +36,14 @@ export function getCssVar(name: string): string {
   return value;
 }
 
+// Parse HSL values from the first theme color to use as base for generating consistent colors
+function getBaseColorProperties(): { s: number; l: number } {
+  const value = getCssVar('--chart-1');
+  if (!value) return { s: 70, l: 50 }; // Fallback values
+  const [_, s, l] = value.split(' ').map(Number);
+  return { s, l };
+}
+
 export function getChartColor(index: number): string {
   const value = getCssVar(`--chart-${index + 1}`);
   if (!value) return '';
@@ -43,6 +51,30 @@ export function getChartColor(index: number): string {
   return hslToRgb(h, s, l);
 }
 
+// Generate a color with consistent saturation and lightness but different hue
+function generateConsistentColor(index: number): string {
+  const { s, l } = getBaseColorProperties();
+  // Generate hue values that are visually distinct
+  // Using golden ratio to spread hues evenly
+  const goldenRatio = 0.618033988749895;
+  const hue = Math.floor((index * goldenRatio * 360) % 360);
+  return hslToRgb(hue, s, l);
+}
+
 export function getChartColors(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => getChartColor(i % 5));
+  // First use theme colors
+  const themeColors = Array.from({ length: Math.min(count, 5) }, (_, i) => {
+    const color = getChartColor(i);
+    return color || generateConsistentColor(i);
+  });
+
+  // If we need more colors, generate them with consistent properties
+  if (count > 5) {
+    const additionalColors = Array.from({ length: count - 5 }, (_, i) => 
+      generateConsistentColor(i + 5)
+    );
+    return [...themeColors, ...additionalColors];
+  }
+
+  return themeColors;
 } 
