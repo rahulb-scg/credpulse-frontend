@@ -1,4 +1,5 @@
 import { roundToTwoDecimals } from "@/utils/number.utils";
+import { getChartColors } from "@/utils/color.utils";
 import EChartsWrapper from "@components/echarts/EChartsWrapper";
 import * as echarts from "echarts";
 import React from "react";
@@ -30,6 +31,8 @@ export function getFakePieChartData(count: number) {
 }
 
 const PieChart: React.FC<PieChartProps> = ({ data, title, label = {} }) => {
+  const colors = getChartColors(data.length);
+
   const chartOption: echarts.EChartsOption = {
     tooltip: {
       trigger: "item",
@@ -38,7 +41,7 @@ const PieChart: React.FC<PieChartProps> = ({ data, title, label = {} }) => {
       top: "5%",
       left: "center",
     },
-
+    color: colors,
     series: [
       {
         name: title,
@@ -49,7 +52,6 @@ const PieChart: React.FC<PieChartProps> = ({ data, title, label = {} }) => {
         itemStyle: {
           borderRadius: 10,
         },
-
         label: {
           ...label,
           show: false,

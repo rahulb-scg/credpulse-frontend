@@ -1,6 +1,7 @@
 import React from "react"
 import EChartsWrapper from "./EChartsWrapper"
 import type { EChartsOption } from "echarts"
+import { getChartColors } from "@/utils/color.utils"
 
 interface StackedAreaChartProps {
   data: {
@@ -11,22 +12,14 @@ interface StackedAreaChartProps {
     }>
   }
   title?: string
-  colors?: string[]
 }
 
 const StackedAreaChart: React.FC<StackedAreaChartProps> = ({
   data,
-  title,
-  colors = [
-    "#2563eb", // blue-600
-    "#7c3aed", // violet-600
-    "#db2777", // pink-600
-    "#ea580c", // orange-600
-    "#16a34a", // green-600
-    "#ca8a04", // yellow-600
-    "#64748b" // slate-500 (for "Others")
-  ]
+  title
 }) => {
+  const colors = getChartColors(data.series.length);
+
   const option: EChartsOption = {
     title: title
       ? {

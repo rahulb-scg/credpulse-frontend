@@ -1,6 +1,7 @@
 "use client";
 
 import { roundToTwoDecimals } from "@/utils/number.utils";
+import { getChartColors } from "@/utils/color.utils";
 import EChartsWrapper from "@components/echarts/EChartsWrapper";
 import * as echarts from "echarts";
 import React from "react";
@@ -30,6 +31,8 @@ export const AnimatedBarchart: React.FC<AnimatedHistogramProps> = ({
   xAxisData,
   delay,
 }) => {
+  const colors = getChartColors(datasets.length);
+
   const chartOption: echarts.EChartsOption = {
     title: {
       text: title,
@@ -37,6 +40,7 @@ export const AnimatedBarchart: React.FC<AnimatedHistogramProps> = ({
     legend: {
       data: datasetNames,
     },
+    color: colors,
     toolbox: {
       feature: {
         magicType: {

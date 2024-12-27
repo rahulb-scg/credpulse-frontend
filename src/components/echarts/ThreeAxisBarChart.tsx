@@ -1,4 +1,5 @@
 import { roundToTwoDecimals } from "@/utils/number.utils";
+import { getChartColor } from "@/utils/color.utils";
 import EChartsWrapper from "@components/echarts/EChartsWrapper";
 import * as echarts from "echarts";
 import React from "react";
@@ -7,9 +8,6 @@ interface ThreeAxisBarChartProps {
   title: ThreeAxisBarTitle;
   data: ThreeAxIsBarGraphDataItem[];
   orientation: "horizontal" | "vertical";
-  startColor: string;
-  middleColor: string;
-  endColor: string;
   lowValText: string;
   highValText: string;
 }
@@ -41,9 +39,6 @@ export const ThreeAxisBarChart: React.FC<ThreeAxisBarChartProps> = ({
   title,
   data,
   orientation,
-  startColor,
-  middleColor,
-  endColor,
   lowValText,
   highValText,
 }) => {
@@ -68,10 +63,9 @@ export const ThreeAxisBarChart: React.FC<ThreeAxisBarChartProps> = ({
       min: Math.min(...data.map((d) => d.xValue)),
       max: Math.max(...data.map((d) => d.xValue)),
       text: [highValText, lowValText],
-      // Map the score column to color
       dimension: 0,
       inRange: {
-        color: [startColor, middleColor, endColor],
+        color: [getChartColor(0), getChartColor(1), getChartColor(2)],
       },
     },
     series: [

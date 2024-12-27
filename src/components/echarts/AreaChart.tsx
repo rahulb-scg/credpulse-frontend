@@ -1,6 +1,7 @@
 "use client"
 
 import { roundToTwoDecimals } from "@/utils/number.utils"
+import { getChartColor } from "@/utils/color.utils"
 import EChartsWrapper from "@components/echarts/EChartsWrapper"
 import * as echarts from "echarts"
 import React from "react"
@@ -83,17 +84,17 @@ const AreaChart: React.FC<AreaChartProps> = ({ data, title, label }) => {
         symbol: "none",
         sampling: "lttb",
         itemStyle: {
-          color: "rgb(255, 70, 131)"
+          color: getChartColor(0)
         },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             {
               offset: 0,
-              color: "rgb(255, 158, 68)"
+              color: getChartColor(1)
             },
             {
               offset: 1,
-              color: "rgb(255, 70, 131)"
+              color: getChartColor(0)
             }
           ])
         },

@@ -1,4 +1,6 @@
 import EChartsWrapper from "./EChartsWrapper";
+import * as echarts from "echarts";
+import { getChartColors } from "@/utils/color.utils";
 
 interface LineStackChartDataItemProps {
   name: string;
@@ -17,6 +19,8 @@ const LineStackChart = ({
   legends,
   categoryData,
 }: LineStackChartProps) => {
+  const colors = getChartColors(data.length);
+
   const chartOption: echarts.EChartsOption = {
     title: {
       text: title,
@@ -28,6 +32,7 @@ const LineStackChart = ({
       data: legends,
       top: "5%",
     },
+    color: colors,
     xAxis: {
       type: "category",
       data: categoryData,

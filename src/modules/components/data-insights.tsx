@@ -8,6 +8,7 @@ import { DictionaryType } from "@/types/common.type"
 import ReportTableWrapper from "./report-table-wrapper"
 import HalfDoughnut from "@/components/echarts/HalfDoughnut"
 import StackedAreaChart from "@/components/echarts/StackedAreaChart"
+import LineChart from "@/components/echarts/LineChart"
 
 // Logger function for consistent logging format
 const logger = {
@@ -22,37 +23,176 @@ const logger = {
   }
 }
 
+interface PeriodStatistics {
+  loan_count: number
+  max_balance: number
+  mean_balance: number
+  median_balance: number
+  min_balance: number
+  std_balance: number
+  total_balance: number
+}
+
+interface BalanceTrendsSummary {
+  average_balance: number
+  end_period: string
+  start_period: string
+  total_balance: number
+  total_loans: number
+  total_periods: number
+}
+
+interface BalanceTrends {
+  analysis_type: string
+  period_over_period_changes: {
+    [period: string]: number
+  }
+  period_statistics: {
+    [period: string]: PeriodStatistics
+  }
+  summary: BalanceTrendsSummary
+}
+
+interface DelinquencyDistributionSummary {
+  end_period: string
+  start_period: string
+  total_loans: number
+  total_periods: number
+  unique_delinquency_statuses: number[]
+}
+
+interface DelinquencyDistribution {
+  analysis_type: string
+  period_distributions: {
+    [period: string]: {
+      [status: string]: number
+    }
+  }
+  summary: DelinquencyDistributionSummary
+}
+
+interface AnalysisExtensions {
+  [key: string]: BalanceTrends | DelinquencyDistribution
+}
+
+interface BackendResponse {
+  _id: string
+  analysis_extensions: AnalysisExtensions
+}
+
 interface DataInsightsProps {
-  response: DictionaryType
-}
-
-interface PeriodData {
-  [key: string]: number
-}
-
-interface DistributionData {
-  [period: string]: PeriodData
+  response: BackendResponse
 }
 
 const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
-  logger.info("Component rendering started")
+  logger.info("Component rendering started", { responseId: response._id })
 
-  const analysis_extensions = response?.analysis_extensions
-  if (!analysis_extensions?.[0]?.period_distributions || !analysis_extensions?.[0]?.summary) {
-    logger.warn("No data found in analysis_extensions")
-    return null
+  const renderBalanceTrends = (balanceTrends: BalanceTrends) => {
+    logger.info("Rendering balance trends analysis")
+    const periods = Object.keys(balanceTrends.period_statistics).sort()
+
+    // Prepare data for line chart
+    const balanceData = {
+      categories: periods,
+      series: [
+        {
+          name: "Mean Balance",
+          data: periods.map((period) => balanceTrends.period_statistics[period].mean_balance)
+        },
+        {
+          name: "Median Balance",
+          data: periods.map((period) => balanceTrends.period_statistics[period].median_balance)
+        }
+      ]
+    }
+
+    // Prepare data for period over period changes
+    const popData = {
+      categories: periods,
+      series: [
+        {
+          name: "Period over Period Change (%)",
+          data: periods.map((period) => balanceTrends.period_over_period_changes[period] || 0)
+        }
+      ]
+    }
+
+    return (
+      <ReportTableWrapper title="Balance Trends Analysis">
+        <div className="space-y-8">
+          <div className="w-1/2">
+            <ScrollArea className="flex-1 rounded-md border">
+              <Table>
+                <TableBody>
+                  <TableRow>
+                    <TableCell colSpan={2} className="bg-muted/50 font-semibold text-primary">
+                      Summary Statistics
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium w-[200px]">Average Balance</TableCell>
+                    <TableCell className="w-[300px]">
+                      $
+                      {balanceTrends.summary.average_balance.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium">Total Balance</TableCell>
+                    <TableCell>
+                      $
+                      {balanceTrends.summary.total_balance.toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                      })}
+                    </TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium">Total Loans</TableCell>
+                    <TableCell>{balanceTrends.summary.total_loans.toLocaleString()}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium">Total Periods</TableCell>
+                    <TableCell>{balanceTrends.summary.total_periods}</TableCell>
+                  </TableRow>
+                  <TableRow>
+                    <TableCell className="bg-muted/20 font-medium">Date Range</TableCell>
+                    <TableCell>
+                      {balanceTrends.summary.start_period} to {balanceTrends.summary.end_period}
+                    </TableCell>
+                  </TableRow>
+                </TableBody>
+              </Table>
+              <ScrollBar orientation="horizontal" />
+            </ScrollArea>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8">
+            <div className="min-h-[500px]">
+              <LineChart data={balanceData} title="Balance Trends Over Time" yAxisLabel="Balance ($)" />
+            </div>
+            <div className="min-h-[500px]">
+              <LineChart data={popData} title="Period over Period Changes" yAxisLabel="Change (%)" />
+            </div>
+          </div>
+        </div>
+      </ReportTableWrapper>
+    )
   }
 
-  try {
-    const { period_distributions, summary } = analysis_extensions[0]
-    const distributionData = period_distributions as DistributionData
-    logger.info("Data extraction successful", { summary, periodsCount: Object.keys(distributionData).length })
+  const renderDelinquencyDistribution = (delinquencyDist: DelinquencyDistribution) => {
+    logger.info("Rendering delinquency distribution analysis")
+    const { period_distributions, summary } = delinquencyDist
+    const distributionData = period_distributions
 
     // Get sorted periods for the select dropdown
     const periods = Object.keys(distributionData).sort()
     const [selectedPeriod, setSelectedPeriod] = useState(periods[periods.length - 1])
 
     // Define delinquency bucket labels
+    logger.info("Setting up delinquency bucket labels")
     const delinquencyLabels: { [key: string]: string } = {
       "0": "Current",
       "1": "30dpd",
@@ -63,14 +203,15 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
     }
 
     // Prepare data for the doughnut chart
+    logger.info(`Preparing doughnut chart data for period: ${selectedPeriod}`)
     const chartData = Object.entries(distributionData[selectedPeriod]).map(([status, count]) => ({
       name: delinquencyLabels[status] || `Bucket ${status}`,
       value: count
     }))
 
     // Prepare data for the stacked area chart
-    // Get top 6 delinquency statuses by total volume
-    const statusTotals = Object.values(distributionData).reduce((acc: PeriodData, periodData) => {
+    logger.info("Preparing stacked area chart data")
+    const statusTotals = Object.values(distributionData).reduce((acc: { [key: string]: number }, periodData) => {
       Object.entries(periodData).forEach(([status, count]) => {
         acc[status] = (acc[status] || 0) + count
       })
@@ -97,7 +238,6 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
             <ScrollArea className="flex-1 rounded-md border">
               <Table>
                 <TableBody>
-                  {/* Summary Section */}
                   <TableRow>
                     <TableCell colSpan={2} className="bg-muted/50 font-semibold text-primary">
                       Summary Statistics
@@ -108,23 +248,23 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
                     <TableCell className="w-[300px]">{summary.total_loans.toLocaleString()}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="bg-muted/20 font-medium w-[200px]">Total Periods</TableCell>
-                    <TableCell className="w-[300px]">{summary.total_periods}</TableCell>
+                    <TableCell className="bg-muted/20 font-medium">Total Periods</TableCell>
+                    <TableCell>{summary.total_periods}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="bg-muted/20 font-medium w-[200px]">Start Period</TableCell>
-                    <TableCell className="w-[300px]">{summary.start_period}</TableCell>
+                    <TableCell className="bg-muted/20 font-medium">Start Period</TableCell>
+                    <TableCell>{summary.start_period}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="bg-muted/20 font-medium w-[200px]">End Period</TableCell>
-                    <TableCell className="w-[300px]">{summary.end_period}</TableCell>
+                    <TableCell className="bg-muted/20 font-medium">End Period</TableCell>
+                    <TableCell>{summary.end_period}</TableCell>
                   </TableRow>
                   <TableRow>
-                    <TableCell className="bg-muted/20 font-medium w-[200px]">Delinquency Statuses</TableCell>
-                    <TableCell className="w-[300px]">
+                    <TableCell className="bg-muted/20 font-medium">Delinquency Statuses</TableCell>
+                    <TableCell>
                       {summary.unique_delinquency_statuses
-                        .sort((a: number, b: number) => a - b)
-                        .map((status: number) => (status === 99 ? "Unknown" : status))
+                        .sort((a, b) => a - b)
+                        .map((status) => delinquencyLabels[status] || `Bucket ${status}`)
                         .join(", ")}
                     </TableCell>
                   </TableRow>
@@ -151,13 +291,40 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
         </div>
       </ReportTableWrapper>
     )
+  }
+
+  try {
+    const { analysis_extensions } = response
+    logger.info("Processing analysis extensions", {
+      availableAnalyses: Object.keys(analysis_extensions)
+    })
+
+    return (
+      <div className="space-y-8">
+        {Object.entries(analysis_extensions).map(([key, analysis]) => {
+          logger.info(`Processing analysis: ${key}`, { type: analysis.analysis_type })
+
+          switch (analysis.analysis_type) {
+            case "balance_trends":
+              return <React.Fragment key={key}>{renderBalanceTrends(analysis as BalanceTrends)}</React.Fragment>
+
+            case "delinquency_distribution":
+              return (
+                <React.Fragment key={key}>
+                  {renderDelinquencyDistribution(analysis as DelinquencyDistribution)}
+                </React.Fragment>
+              )
+
+            default:
+              logger.warn(`Unknown analysis type: ${analysis.analysis_type}`)
+              return null
+          }
+        })}
+      </div>
+    )
   } catch (error) {
     logger.error("Fatal error rendering DataInsights", error)
-    return (
-      <ReportTableWrapper title="Delinquency Distribution Analysis">
-        <div className="p-4 text-destructive">Error loading delinquency distribution data</div>
-      </ReportTableWrapper>
-    )
+    return <div className="p-4 text-destructive">Error loading analysis data</div>
   }
 }
 
