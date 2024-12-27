@@ -1,7 +1,6 @@
 import React from "react"
 import EChartsWrapper from "./EChartsWrapper"
 import type { EChartsOption } from "echarts"
-import { getChartColors } from "@/utils/color.utils"
 
 interface StackedAreaChartProps {
   data: {
@@ -18,9 +17,6 @@ const StackedAreaChart: React.FC<StackedAreaChartProps> = ({
   data,
   title
 }) => {
-  // Get colors for each series
-  const colors = getChartColors(data.series.length);
-
   const option: EChartsOption = {
     title: title
       ? {
@@ -34,7 +30,7 @@ const StackedAreaChart: React.FC<StackedAreaChartProps> = ({
       axisPointer: {
         type: "cross",
         label: {
-          backgroundColor: getChartColor(0)
+          backgroundColor: "#6a7985"
         }
       }
     },
@@ -95,7 +91,7 @@ const StackedAreaChart: React.FC<StackedAreaChartProps> = ({
         }
       }
     ],
-    series: data.series.map((item, index) => ({
+    series: data.series.map((item) => ({
       name: item.name,
       type: "line",
       stack: "Total",
@@ -105,8 +101,7 @@ const StackedAreaChart: React.FC<StackedAreaChartProps> = ({
         width: 0
       },
       areaStyle: {
-        opacity: 0.8,
-        color: colors[index]
+        opacity: 0.8
       },
       emphasis: {
         focus: "series",

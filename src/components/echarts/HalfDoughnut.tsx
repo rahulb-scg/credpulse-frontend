@@ -2,7 +2,6 @@ import React from "react"
 import EChartsWrapper from "./EChartsWrapper"
 import type { EChartsOption } from "echarts"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { getChartColors } from "@/utils/color.utils"
 
 interface HalfDoughnutProps {
   data: Array<{ name: string; value: number }>
@@ -42,9 +41,6 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
     ...item,
     value: Number(item.value.toFixed(2))
   }));
-
-  // Get colors for the actual number of segments
-  const colors = getChartColors(formattedData.length);
 
   return (
     <div className="flex flex-col gap-4">
@@ -135,8 +131,7 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
                     align: isLeft ? 'left' : 'right'
                   };
                 },
-                data: formattedData,
-                color: colors
+                data: formattedData
               }
             ]
           }}
