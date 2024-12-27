@@ -19,11 +19,32 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
   selectedPeriod,
   onPeriodChange
 }) => {
-  const colors = getChartColors(data.length);
-  const finalData = data.map((item) => ({
+  // Sort data by value in descending order and limit to top 6 items
+  const sortedData = [...data]
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
+  // Combine remaining items as "Others" if any
+  const othersValue = data.length > 6 
+    ? data
+        .sort((a, b) => b.value - a.value)
+        .slice(6)
+        .reduce((sum, item) => sum + item.value, 0)
+    : 0;
+
+  // Add "Others" category if there are remaining items
+  const finalData = othersValue > 0
+    ? [...sortedData, { name: 'Others', value: othersValue }]
+    : sortedData;
+
+  // Format values to 2 decimal places
+  const formattedData = finalData.map(item => ({
     ...item,
     value: Number(item.value.toFixed(2))
-  }))
+  }));
+
+  // Get colors for the actual number of segments
+  const colors = getChartColors(formattedData.length);
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,7 +69,8 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
         <EChartsWrapper
           option={{
             tooltip: {
-              trigger: "item"
+              trigger: "item",
+              formatter: '{b}: {c} ({d}%)'
             },
             toolbox: {
               top: 0,
@@ -70,10 +92,6 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
                 fontSize: 12
               }
             },
-            grid: {
-              top: "20%",
-              containLabel: true
-            },
             series: [
               {
                 name: title || "Distribution",
@@ -82,20 +100,42 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
                 center: ["50%", "60%"],
                 startAngle: 180,
                 endAngle: 360,
-                data: finalData,
-                label: {
-                  show: true,
-                  position: "outside",
-                  formatter: "{b}: {c} ({d}%)"
-                },
-                labelLine: {
-                  show: true
-                },
+                avoidLabelOverlap: true,
                 itemStyle: {
                   borderRadius: 4,
                   borderColor: "#fff",
                   borderWidth: 2
                 },
+                label: {
+                  show: true,
+                  position: "outside",
+                  formatter: "{b}: {c} ({d}%)",
+                  alignTo: 'edge',
+                  minMargin: 5,
+                  edgeDistance: 10,
+                  lineHeight: 15,
+                  rich: {
+                    time: {
+                      fontSize: 10,
+                      color: '#999'
+                    }
+                  }
+                },
+                labelLine: {
+                  length: 15,
+                  length2: 0,
+                  maxSurfaceAngle: 80
+                },
+                labelLayout: function (params: any) {
+                  const isLeft = params.labelRect.x < params.rect.width / 2;
+                  return {
+                    hideOverlap: true,
+                    moveOverlap: 'shiftY',
+                    x: isLeft ? params.labelRect.x : params.labelRect.x + params.labelRect.width,
+                    align: isLeft ? 'left' : 'right'
+                  };
+                },
+                data: formattedData,
                 color: colors
               }
             ]
