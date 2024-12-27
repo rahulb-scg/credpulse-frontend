@@ -1,5 +1,6 @@
 import { roundToTwoDecimals } from "@/utils/number.utils";
-import EChartsWrapper from "@components/echarts/EChartsWrapper";
+import EChartsWrapper from "./EChartsWrapper";
+import { getBaseChartConfig } from "@/utils/chart.utils";
 import * as echarts from "echarts";
 import React from "react";
 
@@ -16,6 +17,7 @@ export interface PolyChartDataSet {
 
 interface PolyChartProps {
   title: string;
+  selector?: React.ReactNode;
   xLabels: string[];
   datasets: PolyChartDataSet[];
 }
@@ -45,8 +47,9 @@ export const generatePolyChartDataset = (
   return dataset;
 };
 
-const PolyChart: React.FC<PolyChartProps> = ({ title, datasets, xLabels }) => {
+const PolyChart: React.FC<PolyChartProps> = ({ title, selector, datasets, xLabels }) => {
   const chartOption: echarts.EChartsOption = {
+    ...getBaseChartConfig(),
     tooltip: {
       trigger: "axis",
       axisPointer: {
@@ -56,17 +59,6 @@ const PolyChart: React.FC<PolyChartProps> = ({ title, datasets, xLabels }) => {
         },
       },
     },
-    toolbox: {
-      show: true,
-      feature: {
-        mark: { show: true },
-        dataView: { show: true, readOnly: false },
-        magicType: { show: true, type: ["line", "bar"] },
-        restore: { show: true },
-        saveAsImage: { show: true },
-      },
-    },
-    calculable: true,
     legend: {
       data: datasets.map((d) => d.name),
       itemGap: 5,
@@ -123,7 +115,7 @@ const PolyChart: React.FC<PolyChartProps> = ({ title, datasets, xLabels }) => {
     })),
   };
 
-  return <EChartsWrapper option={chartOption} />;
+  return <EChartsWrapper option={chartOption} title={title} selector={selector} />;
 };
 
 export default PolyChart;

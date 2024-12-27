@@ -5,11 +5,15 @@ import { getChartColor } from "@/utils/color.utils"
 import EChartsWrapper from "@components/echarts/EChartsWrapper"
 import * as echarts from "echarts"
 import React from "react"
+import { getBaseChartConfig } from "@/utils/chart.utils"
 
 interface AreaChartProps {
   data: AreaChartDataItem[]
   title: string
   label: string
+  xAxisLabel?: string
+  yAxisLabel?: string
+  selector?: React.ReactNode
 }
 
 export interface AreaChartDataItem {
@@ -36,47 +40,29 @@ export function getFakeAreaChartData(startDate: string, count: number): AreaChar
   }))
 }
 
-const AreaChart: React.FC<AreaChartProps> = ({ data, title, label }) => {
+const AreaChart: React.FC<AreaChartProps> = ({ 
+  data, 
+  title, 
+  label, 
+  xAxisLabel, 
+  yAxisLabel,
+  selector 
+}) => {
+  const baseOptions = getBaseChartConfig(xAxisLabel, yAxisLabel)
+  
   const chartOption: echarts.EChartsOption = {
-    tooltip: {
-      trigger: "axis",
-      position: function (pt) {
-        return [pt[0], "10%"]
-      }
-    },
-    title: {
-      left: "center",
-      text: title
-    },
-    toolbox: {
-      feature: {
-        dataZoom: {
-          yAxisIndex: "none"
-        },
-        restore: {},
-        saveAsImage: {}
-      }
-    },
+    ...baseOptions,
     xAxis: {
       type: "category",
       boundaryGap: false,
-      data: data.map((item) => item.date)
-    },
-    yAxis: {
-      type: "value",
-      boundaryGap: [0, "100%"]
-    },
-    dataZoom: [
-      {
-        type: "inside",
-        start: 0,
-        end: 10
-      },
-      {
-        start: 0,
-        end: 10
+      data: data.map((item) => item.date),
+      name: xAxisLabel,
+      nameLocation: 'middle',
+      nameGap: 35,
+      axisLabel: {
+        hideOverlap: true
       }
-    ],
+    },
     series: [
       {
         name: label,
@@ -98,11 +84,18 @@ const AreaChart: React.FC<AreaChartProps> = ({ data, title, label }) => {
             }
           ])
         },
-        data: data.map((item) => roundToTwoDecimals(item.data))
+        data: data.map((item) => item.data)
       }
     ]
   }
-  return <EChartsWrapper option={chartOption} />
+
+  return (
+    <EChartsWrapper 
+      option={chartOption}
+      title={title}
+      selector={selector}
+    />
+  )
 }
 
 export default AreaChart

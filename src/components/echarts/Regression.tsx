@@ -5,6 +5,7 @@ import * as echarts from "echarts"
 import { transform } from "echarts-stat"
 import React, { useEffect } from "react"
 import { logger } from "@/lib/logger"
+import { getBaseChartConfig } from "@/utils/chart.utils"
 
 export enum RegressionPattern {
   LINEAR = "linear",
@@ -42,13 +43,21 @@ export function getFakeRegressionData(
 
 interface RegressChartProps {
   title: string
+  selector?: React.ReactNode
   data: string[][]
   order?: number
   xAxisLabel?: string
   yAxisLabel?: string
 }
 
-const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabel, yAxisLabel }) => {
+const Regression: React.FC<RegressChartProps> = ({ 
+  title, 
+  selector, 
+  data, 
+  order, 
+  xAxisLabel, 
+  yAxisLabel 
+}) => {
   useEffect(() => {
     echarts.registerTransform(transform.regression)
   }, [])
@@ -74,6 +83,7 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabe
   })
 
   const chartOption: echarts.EChartsOption = {
+    ...getBaseChartConfig(),
     dataset: [
       {
         source: validData.map(([x, y]) => [parseFloat(x), parseFloat(y)])
@@ -88,11 +98,6 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabe
         }
       }
     ],
-    title: {
-      text: title,
-      left: "center",
-      padding: 16
-    },
     tooltip: {
       trigger: "axis",
       axisPointer: {
@@ -165,11 +170,7 @@ const Regression: React.FC<RegressChartProps> = ({ title, data, order, xAxisLabe
     ]
   }
 
-  return (
-    <div className="w-full h-[400px]">
-      <EChartsWrapper option={chartOption} />
-    </div>
-  )
+  return <EChartsWrapper option={chartOption} title={title} selector={selector} />
 }
 
 export default Regression

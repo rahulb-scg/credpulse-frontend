@@ -5,12 +5,16 @@ import * as echarts from "echarts";
 // @ts-ignore
 import { transform } from "echarts-stat";
 import React from "react";
+import { getBaseChartConfig } from "@/utils/chart.utils";
 
 interface ClusteringProps {
   title: string;
+  selector: React.ReactNode;
   data: number[][];
   clusterCount: number;
   colors: string[];
+  xAxisLabel?: string;
+  yAxisLabel?: string;
 }
 
 export function getFakeClusteringData(pointCount: number): number[][] {
@@ -27,6 +31,10 @@ const Clustering: React.FC<ClusteringProps> = ({
   clusterCount,
   data,
   colors,
+  title,
+  selector,
+  xAxisLabel,
+  yAxisLabel
 }) => {
   echarts.registerTransform(transform.clustering);
 
@@ -35,17 +43,20 @@ const Clustering: React.FC<ClusteringProps> = ({
     pieces.push({
       value: i,
       label: "cluster " + i,
-      color: colors[i],
+      color: colors[i]
     });
   }
 
+  const baseOptions = getBaseChartConfig(xAxisLabel, yAxisLabel, false);
+
   const chartOption: echarts.EChartsOption = {
+    ...baseOptions,
     dataset: [
       {
         source: data.map((item) => [
           roundToTwoDecimals(item[0]),
-          roundToTwoDecimals(item[1]),
-        ]),
+          roundToTwoDecimals(item[1])
+        ])
       },
       {
         transform: {
@@ -53,14 +64,11 @@ const Clustering: React.FC<ClusteringProps> = ({
           config: {
             clusterCount: clusterCount,
             outputType: "single",
-            outputClusterIndexDimension: 2,
-          },
-        },
-      },
+            outputClusterIndexDimension: 2
+          }
+        }
+      }
     ],
-    tooltip: {
-      position: "top",
-    },
     visualMap: {
       type: "piecewise",
       top: "middle",
@@ -69,25 +77,23 @@ const Clustering: React.FC<ClusteringProps> = ({
       left: 10,
       splitNumber: clusterCount,
       dimension: 2,
-      pieces: pieces,
+      pieces: pieces
     },
     grid: {
-      left: 120,
+      left: 120
     },
-    xAxis: {},
-    yAxis: {},
     series: {
       type: "scatter",
       encode: { tooltip: [0, 1] },
       symbolSize: 15,
       itemStyle: {
-        borderColor: "#555",
+        borderColor: "#555"
       },
-      datasetIndex: 1,
-    },
+      datasetIndex: 1
+    }
   };
 
-  return <EChartsWrapper option={chartOption} />;
+  return <EChartsWrapper option={chartOption} title={title} selector={selector} />;
 };
 
 export default Clustering;

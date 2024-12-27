@@ -4,15 +4,27 @@ import EChartsWrapper from "@components/echarts/EChartsWrapper"
 import * as echarts from "echarts"
 import React from "react"
 import { getChartColor } from "@/utils/color.utils"
+import { getBaseChartConfig } from "@/utils/chart.utils"
 
 interface HistogramProps {
   data: number[]
   title: string
   label: string
+  xAxisLabel?: string
+  yAxisLabel?: string
   bins?: number
+  selector?: React.ReactNode
 }
 
-const Histogram: React.FC<HistogramProps> = ({ data, title, label, bins = 10 }) => {
+const Histogram: React.FC<HistogramProps> = ({ 
+  data, 
+  title, 
+  label, 
+  xAxisLabel, 
+  yAxisLabel, 
+  bins = 10,
+  selector 
+}) => {
   // Calculate histogram data
   const min = Math.min(...data)
   const max = Math.max(...data)
@@ -25,33 +37,19 @@ const Histogram: React.FC<HistogramProps> = ({ data, title, label, bins = 10 }) 
   })
 
   const binBoundaries = Array(bins).fill(0).map((_, i) => min + i * binWidth)
+  const baseOptions = getBaseChartConfig(xAxisLabel || label, yAxisLabel || "Frequency", false)
 
   const chartOption: echarts.EChartsOption = {
-    title: {
-      text: title,
-      left: "center"
-    },
-    tooltip: {
-      trigger: "axis",
-      axisPointer: {
-        type: "shadow"
-      }
-    },
-    grid: {
-      left: "10%",
-      right: "10%",
-      bottom: "15%"
-    },
+    ...baseOptions,
     xAxis: {
       type: "category",
       data: binBoundaries.map((boundary) => boundary.toFixed(2)),
-      name: label,
-      nameLocation: "middle",
-      nameGap: 30
-    },
-    yAxis: {
-      type: "value",
-      name: "Frequency"
+      name: xAxisLabel || label,
+      nameLocation: 'middle',
+      nameGap: 35,
+      axisLabel: {
+        hideOverlap: true
+      }
     },
     series: [
       {
@@ -70,7 +68,7 @@ const Histogram: React.FC<HistogramProps> = ({ data, title, label, bins = 10 }) 
     ]
   }
 
-  return <EChartsWrapper option={chartOption} />
+  return <EChartsWrapper option={chartOption} title={title} selector={selector} />
 }
 
 export default Histogram

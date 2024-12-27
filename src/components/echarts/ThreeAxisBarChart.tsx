@@ -3,6 +3,7 @@ import { getChartColor } from "@/utils/color.utils";
 import EChartsWrapper from "@components/echarts/EChartsWrapper";
 import * as echarts from "echarts";
 import React from "react";
+import { getBaseChartConfig } from "@/utils/chart.utils";
 
 interface ThreeAxisBarChartProps {
   title: ThreeAxisBarTitle;
@@ -10,6 +11,7 @@ interface ThreeAxisBarChartProps {
   orientation: "horizontal" | "vertical";
   lowValText: string;
   highValText: string;
+  selector?: string;
 }
 
 export interface ThreeAxIsBarGraphDataItem {
@@ -17,6 +19,7 @@ export interface ThreeAxIsBarGraphDataItem {
   yValue: number;
   Label: string;
 }
+
 export interface ThreeAxisBarTitle {
   xColumnName: string;
   yColumnName: string;
@@ -41,8 +44,12 @@ export const ThreeAxisBarChart: React.FC<ThreeAxisBarChartProps> = ({
   orientation,
   lowValText,
   highValText,
+  selector,
 }) => {
+  const baseOptions = getBaseChartConfig();
+
   const chartOption: echarts.EChartsOption = {
+    ...baseOptions,
     dataset: {
       source: [
         [title.xColumnName, title.yColumnName, title.labelColumnName],
@@ -53,10 +60,10 @@ export const ThreeAxisBarChart: React.FC<ThreeAxisBarChartProps> = ({
         ]),
       ],
     },
-    tooltip: {},
-    grid: { containLabel: true },
-    xAxis: { name: title.xColumnName },
-    yAxis: { type: "category", name: title.yColumnName },
+    grid: {
+      containLabel: true,
+      left: '15%'
+    },
     visualMap: {
       orient: orientation,
       left: "center",
@@ -79,5 +86,11 @@ export const ThreeAxisBarChart: React.FC<ThreeAxisBarChartProps> = ({
     ],
   };
 
-  return <EChartsWrapper option={chartOption} />;
+  return <EChartsWrapper 
+    option={chartOption} 
+    title={title.labelColumnName}
+    selector={selector}
+  />;
 };
+
+export default ThreeAxisBarChart;
