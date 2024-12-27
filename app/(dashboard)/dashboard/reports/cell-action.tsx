@@ -22,11 +22,11 @@ const CellAction = ({ data }: { data: DictionaryType }) => {
       </CustomTooltip>
       {data.status === "completed" && (
         <CustomTooltip asChild={false} message="Download">
-          <Button size={"sm"} variant={"outline"} className="w-full">
+          <div className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 cursor-pointer">
             <div className="flex items-center justify-center gap-1">
               <Icons.arrowDropdown className="h-4 w-4 text-blue-500" />
             </div>
-          </Button>
+          </div>
         </CustomTooltip>
       )}
     </div>
