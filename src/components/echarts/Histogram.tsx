@@ -3,6 +3,7 @@
 import EChartsWrapper from "@components/echarts/EChartsWrapper"
 import * as echarts from "echarts"
 import React from "react"
+import { getChartColor } from "@/utils/color.utils"
 
 interface HistogramProps {
   data: number[]
@@ -12,30 +13,18 @@ interface HistogramProps {
 }
 
 const Histogram: React.FC<HistogramProps> = ({ data, title, label, bins = 10 }) => {
-  const prepareHistogramData = (rawData: number[]) => {
-    const min = Math.min(...rawData)
-    const max = Math.max(...rawData)
-    const binWidth = (max - min) / bins
+  // Calculate histogram data
+  const min = Math.min(...data)
+  const max = Math.max(...data)
+  const binWidth = (max - min) / bins
+  const binData = Array(bins).fill(0)
+  
+  data.forEach((value) => {
+    const binIndex = Math.min(Math.floor((value - min) / binWidth), bins - 1)
+    binData[binIndex]++
+  })
 
-    // Initialize bins
-    const histogramBins = Array(bins).fill(0)
-    const binRanges = Array(bins)
-      .fill(0)
-      .map((_, i) => min + i * binWidth)
-
-    // Count values in each bin
-    rawData.forEach((value) => {
-      const binIndex = Math.min(Math.floor((value - min) / binWidth), bins - 1)
-      histogramBins[binIndex]++
-    })
-
-    return {
-      binCounts: histogramBins,
-      binRanges: binRanges.map((start) => start.toFixed(2))
-    }
-  }
-
-  const { binCounts, binRanges } = prepareHistogramData(data)
+  const binBoundaries = Array(bins).fill(0).map((_, i) => min + i * binWidth)
 
   const chartOption: echarts.EChartsOption = {
     title: {
@@ -55,13 +44,10 @@ const Histogram: React.FC<HistogramProps> = ({ data, title, label, bins = 10 }) 
     },
     xAxis: {
       type: "category",
-      data: binRanges,
+      data: binBoundaries.map((boundary) => boundary.toFixed(2)),
       name: label,
       nameLocation: "middle",
-      nameGap: 30,
-      axisLabel: {
-        rotate: 45
-      }
+      nameGap: 30
     },
     yAxis: {
       type: "value",
@@ -71,13 +57,13 @@ const Histogram: React.FC<HistogramProps> = ({ data, title, label, bins = 10 }) 
       {
         name: "Frequency",
         type: "bar",
-        data: binCounts,
-        barWidth: "99%",
-        tooltip: {
-          formatter: function (param: any) {
-            const binStart = parseFloat(binRanges[param.dataIndex])
-            const binEnd = parseFloat(binRanges[param.dataIndex + 1] || (binStart + (max - min) / bins).toFixed(2))
-            return [`Range: [${binStart}, ${binEnd})`, `Count: ${param.value}`].join("<br/>")
+        data: binData,
+        itemStyle: {
+          color: getChartColor(0)
+        },
+        emphasis: {
+          itemStyle: {
+            color: getChartColor(1)
           }
         }
       }

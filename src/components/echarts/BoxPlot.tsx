@@ -3,6 +3,7 @@
 import EChartsWrapper from "@components/echarts/EChartsWrapper"
 import * as echarts from "echarts"
 import React from "react"
+import { getChartColor } from "@/utils/color.utils"
 
 interface BoxPlotProps {
   data: number[]
@@ -11,30 +12,18 @@ interface BoxPlotProps {
 }
 
 const BoxPlot: React.FC<BoxPlotProps> = ({ data, title, label }) => {
-  const prepareBoxplotData = (rawData: number[]) => {
-    const sortedData = [...rawData].sort((a, b) => a - b)
-    const len = sortedData.length
-
-    // Calculate quartiles
-    const q1 = sortedData[Math.floor(len * 0.25)]
-    const median = sortedData[Math.floor(len * 0.5)]
-    const q3 = sortedData[Math.floor(len * 0.75)]
-    const iqr = q3 - q1
-
-    // Calculate whiskers
-    const lowerWhisker = Math.max(...sortedData.filter((v) => v >= q1 - 1.5 * iqr))
-    const upperWhisker = Math.min(...sortedData.filter((v) => v <= q3 + 1.5 * iqr))
-
-    // Find outliers
-    const outliers = sortedData.filter((v) => v < lowerWhisker || v > upperWhisker)
-
-    return {
-      boxData: [[lowerWhisker, q1, median, q3, upperWhisker]],
-      outliers: outliers.map((value) => [0, value]) // First value is the x-axis position
-    }
-  }
-
-  const { boxData, outliers } = prepareBoxplotData(data)
+  // Calculate box plot data
+  const sortedData = [...data].sort((a, b) => a - b)
+  const q1Index = Math.floor(sortedData.length * 0.25)
+  const q3Index = Math.floor(sortedData.length * 0.75)
+  const q1 = sortedData[q1Index]
+  const q3 = sortedData[q3Index]
+  const median = sortedData[Math.floor(sortedData.length * 0.5)]
+  const iqr = q3 - q1
+  const lowerWhisker = Math.max(...sortedData.filter((d) => d >= q1 - 1.5 * iqr))
+  const upperWhisker = Math.min(...sortedData.filter((d) => d <= q3 + 1.5 * iqr))
+  const outliers = sortedData.filter((d) => d < lowerWhisker || d > upperWhisker).map((value) => [label, value])
+  const boxData = [[lowerWhisker, q1, median, q3, upperWhisker]]
 
   const chartOption: echarts.EChartsOption = {
     title: {
@@ -79,6 +68,10 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, title, label }) => {
         name: "BoxPlot",
         type: "boxplot",
         data: boxData,
+        itemStyle: {
+          color: getChartColor(0),
+          borderColor: getChartColor(1)
+        },
         tooltip: {
           formatter: function (param: any) {
             return [
@@ -96,6 +89,9 @@ const BoxPlot: React.FC<BoxPlotProps> = ({ data, title, label }) => {
         name: "Outliers",
         type: "scatter",
         data: outliers,
+        itemStyle: {
+          color: getChartColor(2)
+        },
         tooltip: {
           formatter: function (param: any) {
             return `Outlier: ${param.data[1].toFixed(2)}`
