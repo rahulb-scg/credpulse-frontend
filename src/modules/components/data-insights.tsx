@@ -85,7 +85,13 @@ interface DataInsightsProps {
 }
 
 const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
-  logger.info("Component rendering started", { responseId: response._id })
+  logger.info("Initializing DataInsights component")
+  const { analysis_extensions } = response
+
+  // State for delinquency distribution
+  const delinquencyDist = analysis_extensions["delinquency_distribution"] as DelinquencyDistribution
+  const periods = delinquencyDist ? Object.keys(delinquencyDist.period_distributions).sort() : []
+  const [selectedPeriod, setSelectedPeriod] = useState(periods.length > 0 ? periods[periods.length - 1] : "")
 
   const renderBalanceTrends = (balanceTrends: BalanceTrends) => {
     logger.info("Rendering balance trends analysis")
@@ -182,14 +188,10 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
     )
   }
 
-  const renderDelinquencyDistribution = (delinquencyDist: DelinquencyDistribution) => {
+  const renderDelinquencyDistribution = (delinquencyDist: DelinquencyDistribution, currentPeriod: string, onPeriodChange: (period: string) => void) => {
     logger.info("Rendering delinquency distribution analysis")
     const { period_distributions, summary } = delinquencyDist
     const distributionData = period_distributions
-
-    // Get sorted periods for the select dropdown
-    const periods = Object.keys(distributionData).sort()
-    const [selectedPeriod, setSelectedPeriod] = useState(periods[periods.length - 1])
 
     // Define delinquency bucket labels
     logger.info("Setting up delinquency bucket labels")
@@ -203,8 +205,8 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
     }
 
     // Prepare data for the doughnut chart
-    logger.info(`Preparing doughnut chart data for period: ${selectedPeriod}`)
-    const chartData = Object.entries(distributionData[selectedPeriod]).map(([status, count]) => ({
+    logger.info(`Preparing doughnut chart data for period: ${currentPeriod}`)
+    const chartData = Object.entries(distributionData[currentPeriod]).map(([status, count]) => ({
       name: delinquencyLabels[status] || `Bucket ${status}`,
       value: count
     }))
@@ -280,8 +282,8 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
                 data={chartData}
                 title="Delinquency Distribution"
                 periods={periods}
-                selectedPeriod={selectedPeriod}
-                onPeriodChange={setSelectedPeriod}
+                selectedPeriod={currentPeriod}
+                onPeriodChange={onPeriodChange}
               />
             </div>
             <div className="min-h-[500px]">
@@ -294,32 +296,14 @@ const DataInsights: React.FC<DataInsightsProps> = ({ response }) => {
   }
 
   try {
-    const { analysis_extensions } = response
-    logger.info("Processing analysis extensions", {
-      availableAnalyses: Object.keys(analysis_extensions)
-    })
-
     return (
-      <div className="space-y-8">
-        {Object.entries(analysis_extensions).map(([key, analysis]) => {
-          logger.info(`Processing analysis: ${key}`, { type: analysis.analysis_type })
-
-          switch (analysis.analysis_type) {
-            case "balance_trends":
-              return <React.Fragment key={key}>{renderBalanceTrends(analysis as BalanceTrends)}</React.Fragment>
-
-            case "delinquency_distribution":
-              return (
-                <React.Fragment key={key}>
-                  {renderDelinquencyDistribution(analysis as DelinquencyDistribution)}
-                </React.Fragment>
-              )
-
-            default:
-              logger.warn(`Unknown analysis type: ${analysis.analysis_type}`)
-              return null
-          }
-        })}
+      <div className="space-y-4">
+        {analysis_extensions["balance_trends"] && renderBalanceTrends(analysis_extensions["balance_trends"] as BalanceTrends)}
+        {analysis_extensions["delinquency_distribution"] && renderDelinquencyDistribution(
+          analysis_extensions["delinquency_distribution"] as DelinquencyDistribution,
+          selectedPeriod,
+          setSelectedPeriod
+        )}
       </div>
     )
   } catch (error) {
