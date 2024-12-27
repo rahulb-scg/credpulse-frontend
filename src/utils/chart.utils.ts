@@ -15,7 +15,12 @@ export const getBaseChartConfig = (
     } : undefined,
     legend: {
       show: showLegend,
-      top: "5%"
+      top: "5%",
+      itemWidth: 20,
+      itemHeight: 10,
+      textStyle: {
+        fontSize: 12
+      }
     },
     tooltip: {
       trigger: showAxis ? "axis" : "item",

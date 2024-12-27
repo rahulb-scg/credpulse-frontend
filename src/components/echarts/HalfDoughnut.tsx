@@ -47,7 +47,7 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
   const series: PieSeriesOption = {
     type: 'pie',
     radius: ['40%', '70%'],
-    center: ['50%', '50%'],
+    center: ['50%', '70%'],
     startAngle: 180,
     endAngle: 360,
     avoidLabelOverlap: true,
@@ -78,11 +78,6 @@ const HalfDoughnut: React.FC<HalfDoughnutProps> = ({
     tooltip: {
       trigger: "item",
       formatter: '{b}: {c} ({d}%)'
-    },
-    legend: {
-      orient: 'horizontal',
-      bottom: 0,
-      left: 'center'
     },
     series: [series]
   }
